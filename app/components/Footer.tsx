@@ -5,6 +5,10 @@ const navLinks = [
   { label: "About", href: "#about" },
 ];
 
+const locationLinks = [
+  { label: "Hawaii", href: "/hawaii" },
+];
+
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
@@ -12,13 +16,13 @@ export default function Footer() {
     <footer id="about" className="bg-[#0d1b2a]">
       {/* Main footer content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16">
-        <div className="flex flex-col lg:flex-row items-center lg:items-start justify-between gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
           {/* Logo + tagline */}
-          <div className="flex flex-col items-center lg:items-start gap-3">
+          <div className="flex flex-col items-center md:items-start gap-3">
             <span className="text-2xl font-bold text-white font-[family-name:var(--font-playfair)] tracking-tight">
               AAIRE Co.
             </span>
-            <p className="text-white/50 text-sm max-w-xs text-center lg:text-left leading-relaxed">
+            <p className="text-white/50 text-sm max-w-xs text-center md:text-left leading-relaxed">
               Certified Worldwide Steel Buildings Distributor serving all 50 states.
             </p>
             <div className="flex items-center gap-2 mt-1">
@@ -27,25 +31,54 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Nav links */}
-          <nav
-            className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3"
-            aria-label="Footer navigation"
-          >
-            {navLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                id={`footer-nav-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
-                className="text-white/60 hover:text-[#C9A96E] text-sm font-medium transition-colors duration-200"
-              >
-                {link.label}
-              </a>
-            ))}
-          </nav>
+          {/* Main Nav links */}
+          <div className="flex flex-col items-center md:items-start gap-4">
+            <h3 className="text-white font-semibold text-sm uppercase tracking-wide">
+              Navigation
+            </h3>
+            <nav
+              className="flex flex-col items-center md:items-start gap-3"
+              aria-label="Footer navigation"
+            >
+              {navLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  id={`footer-nav-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
+                  className="text-white/60 hover:text-[#C9A96E] text-sm font-medium transition-colors duration-200"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+          </div>
+
+          {/* Locations */}
+          <div className="flex flex-col items-center md:items-start gap-4">
+            <h3 className="text-white font-semibold text-sm uppercase tracking-wide">
+              Locations
+            </h3>
+            <nav
+              className="flex flex-col items-center md:items-start gap-3"
+              aria-label="Location pages"
+            >
+              {locationLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className="text-white/60 hover:text-[#C9A96E] text-sm font-medium transition-colors duration-200"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+          </div>
 
           {/* CTA */}
-          <div className="flex-shrink-0">
+          <div className="flex flex-col items-center md:items-start gap-4">
+            <h3 className="text-white font-semibold text-sm uppercase tracking-wide">
+              Get Started
+            </h3>
             <a
               href="#quote"
               id="footer-cta-button"
