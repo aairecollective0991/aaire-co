@@ -279,6 +279,15 @@ export default function SiteCheckPage() {
               area? Enter your county and building type below to see what to
               expect.
             </motion.p>
+            <motion.p
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              custom={0.4}
+              className="mt-4 text-white/50 text-sm lg:text-base leading-relaxed max-w-2xl mx-auto font-[family-name:var(--font-inter)]"
+            >
+              Note: While this tool currently covers North Carolina counties, AAIRE Co. serves customers nationwide. Contact us for permit and code requirements in any state.
+            </motion.p>
           </div>
         </section>
 
@@ -430,7 +439,7 @@ export default function SiteCheckPage() {
               </h2>
               <p className="mt-6 text-white/70 text-lg lg:text-xl leading-relaxed max-w-2xl mx-auto font-[family-name:var(--font-inter)]">
                 We&apos;ve helped customers navigate county requirements across
-                the Charlotte region. Get a free quote and we&apos;ll walk you
+                the country. Get a free quote and we&apos;ll walk you
                 through what your specific site needs.
               </p>
               <div className="mt-10 flex justify-center">

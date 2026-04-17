@@ -19,11 +19,11 @@ export default function Footer() {
               AAIRE Co.
             </span>
             <p className="text-white/50 text-sm max-w-xs text-center lg:text-left leading-relaxed">
-              Certified Worldwide Steel Buildings Distributor serving the Lake Norman & Charlotte region.
+              Certified Worldwide Steel Buildings Distributor serving all 50 states.
             </p>
             <div className="flex items-center gap-2 mt-1">
               <span className="w-1.5 h-1.5 rounded-full bg-[#C9A96E]" />
-              <span className="text-[#C9A96E] text-xs font-medium">Lake Norman, NC</span>
+              <span className="text-[#C9A96E] text-xs font-medium">Nationwide Delivery</span>
             </div>
           </div>
 

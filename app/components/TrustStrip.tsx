@@ -2,10 +2,9 @@ import Image from "next/image";
 
 const trustItems = [
   "Factory Direct Pricing",
-  "Lake Norman Area",
+  "Serving All 50 States",
   "Response Within 2 Hours",
   "50-Year Structural Warranty",
-  "Financing Available",
 ];
 
 export default function TrustStrip() {

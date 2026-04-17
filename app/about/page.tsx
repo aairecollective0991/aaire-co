@@ -57,8 +57,8 @@ const values = [
   },
   {
     eyebrow: "03",
-    title: "Local Focus",
-    body: "We live here. Lake Norman, Charlotte, the Carolina Piedmont — our customers are neighbors, and our reputation rides on every project.",
+    title: "Nationwide Reach",
+    body: "From coast to coast, we deliver the same personal service and attention to detail. Every customer gets the same care, whether you're in North Carolina or Nevada.",
   },
 ];
 
@@ -131,9 +131,7 @@ export default function AboutPage() {
               custom={0.3}
               className="mt-8 text-white/70 text-lg lg:text-xl leading-relaxed max-w-2xl mx-auto font-[family-name:var(--font-inter)]"
             >
-              AAIRE Co. Metal Buildings is a family-run steel building
-              distributor proudly serving Lake Norman, Charlotte, and the
-              greater North Carolina region — turning raw land into barns,
+              AAIRE Co. Metal Buildings is a certified Worldwide Steel Buildings distributor serving customers across all 50 states — turning raw land into barns,
               shops, and homes that are built to last.
             </motion.p>
           </div>

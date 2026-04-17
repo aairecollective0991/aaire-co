@@ -106,7 +106,7 @@ const structureTypes = [
     headline: "Gambrel Style",
     subheadline: "The barn aesthetic with steel durability",
     description:
-      "The gambrel roof style features a two-slope design on each side — a steeper lower slope and a shallower upper slope. This distinctive barn profile maximizes usable interior volume, providing significant loft or upper storage space while maintaining the agricultural aesthetic many Lake Norman property owners want.",
+      "The gambrel roof style features a two-slope design on each side — a steeper lower slope and a shallower upper slope. This distinctive barn profile maximizes usable interior volume, providing significant loft or upper storage space while maintaining the classic agricultural aesthetic that property owners across the country appreciate.",
     pros: [
       "Maximum interior volume for the footprint",
       "Distinctive barn aesthetic — fits residential and agricultural settings",

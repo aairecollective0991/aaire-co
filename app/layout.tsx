@@ -17,7 +17,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "AAIRE Co. Metal Buildings | Certified Steel Building Distributor",
   description:
-    "Serving the Lake Norman and Charlotte region with factory-direct steel buildings — barndominiums, garages, RV covers, and agricultural structures. 50-Year Structural Warranty.",
+    "Factory-direct steel buildings delivered across all 50 states — barndominiums, garages, RV covers, and agricultural structures. 50-Year Structural Warranty.",
 };
 
 export default function RootLayout({

@@ -97,8 +97,7 @@ export default function Hero() {
               custom={0.3}
               className="text-white/70 text-lg lg:text-xl leading-relaxed max-w-lg font-[family-name:var(--font-inter)]"
             >
-              Serving the Lake Norman and Charlotte region with factory-direct
-              steel buildings — from custom barndominiums to heavy-duty
+              Factory-direct steel buildings delivered anywhere in the USA — from custom barndominiums to heavy-duty
               agricultural structures.
             </motion.p>
 
@@ -175,7 +174,7 @@ export default function Hero() {
               {[
                 { value: "2hr", label: "Response Time" },
                 { value: "Factory", label: "Direct Pricing" },
-                { value: "Local", label: "Lake Norman Area" },
+                { value: "50", label: "States Served" },
                 { value: "100%", label: "Custom Builds" },
               ].map((stat) => (
                 <div
