@@ -357,7 +357,7 @@ export default function SiteCheckPage() {
               custom={0.15}
               className="font-[family-name:var(--font-playfair)] text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-[1.1] tracking-tight"
             >
-              NC Build <span className="text-[#C9A96E]">Site Checker</span>
+              Build <span className="text-[#C9A96E]">Site Checker</span>
             </motion.h1>
 
             <motion.p
@@ -379,7 +379,7 @@ export default function SiteCheckPage() {
               custom={0.4}
               className="mt-4 text-white/50 text-sm lg:text-base leading-relaxed max-w-2xl mx-auto font-[family-name:var(--font-inter)]"
             >
-              Note: While this tool currently covers North Carolina counties, AAIRE Co. serves customers nationwide. Contact us for permit and code requirements in any state.
+              Note: While this tool currently covers North Carolina counties, AAIRE Co. serves customers nationwide. Contact us for permit and code guidance in any state.
             </motion.p>
           </div>
         </section>
@@ -532,7 +532,7 @@ export default function SiteCheckPage() {
                           Hawaii Building Note
                         </h4>
                         <p className="text-[#0d1b2a]/80 text-sm leading-relaxed">
-                          Every Worldwide Steel kit shipped to Hawaii is custom-engineered to meet your county's specific wind load and seismic requirements. Stamped engineering drawings are included for permitting. AAIRE Co. coordinates ocean freight logistics to all major Hawaiian ports.
+                          Every Worldwide Steel kit shipped to Hawaii is custom-engineered to meet your county's specific wind load and seismic requirements. Stamped engineering drawings are included for permitting.
                         </p>
                       </div>
                     </div>
