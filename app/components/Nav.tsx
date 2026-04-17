@@ -16,6 +16,7 @@ export default function Nav() {
 
   const navLinks = [
     { label: "Buildings", href: "/construction" },
+    { label: "Configure", href: "/configure" },
     { label: "Gallery", href: "/gallery" },
     { label: "Build Site Check", href: "/site-check" },
     { label: "About", href: "/about" },
