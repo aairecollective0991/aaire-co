@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@variant dark (.dark &);
+
 @theme inline {
   --color-navy: #0d1b2a;
   --color-gold: #C9A96E;
