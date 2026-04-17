@@ -11,7 +11,7 @@ const trustCards = [
       </svg>
     ),
     title: "Response in 2 Hours",
-    desc: "Submit your info and we'll reach out the same day — usually within 2 hours.",
+    desc: "We respond within 2 hours during business hours. No obligation, no hard sell.",
   },
   {
     id: "trust-warranty",
@@ -77,8 +77,8 @@ export default function QuoteSection() {
                 },
                 {
                   step: "02",
-                  title: "We deliver a no-obligation quote",
-                  desc: "Within 2 hours, you'll have a real price — factory-direct, no inflated middleman costs.",
+                  title: "We respond within 2 hours",
+                  desc: "Got your request. We'll reach out within 2 hours to discuss your project and next steps.",
                 },
               ].map((item) => (
                 <div key={item.step} className="flex gap-5 group">

@@ -16,12 +16,16 @@ type County =
   | "Lincoln"
   | "Stanly";
 
+type HawaiiCounty = "Honolulu" | "Maui" | "Hawaii County" | "Kauai";
+
 type BuildingType =
   | "Barndominium"
   | "Garage / Workshop"
   | "RV Cover / Carport"
   | "Agricultural"
   | "Commercial";
+
+type Tab = "NC" | "Hawaii";
 
 type CountyInfo = {
   permitRequired: boolean;
@@ -34,6 +38,10 @@ type CountyInfo = {
   processTip: string;
 };
 
+type HawaiiCountyInfo = CountyInfo & {
+  specialNotes: string;
+};
+
 const COUNTIES: County[] = [
   "Mecklenburg",
   "Iredell",
@@ -43,6 +51,13 @@ const COUNTIES: County[] = [
   "Union",
   "Lincoln",
   "Stanly",
+];
+
+const HAWAII_COUNTIES: HawaiiCounty[] = [
+  "Honolulu",
+  "Maui",
+  "Hawaii County",
+  "Kauai",
 ];
 
 const BUILDING_TYPES: BuildingType[] = [
@@ -153,6 +168,69 @@ const countyData: Record<County, CountyInfo> = {
   },
 };
 
+const hawaiiCountyData: Record<HawaiiCounty, HawaiiCountyInfo> = {
+  Honolulu: {
+    permitRequired: true,
+    permitNotes:
+      "Building permit required for all new structures. Submit through the Department of Planning and Permitting (DPP). Online permitting available through the city's eBUILD system.",
+    setbacks:
+      "Varies by zoning district. Residential zones typically require 5-20 ft setbacks. Verify with DPP before purchasing land.",
+    windZone: "105-130 mph depending on location and elevation",
+    snowLoad: "N/A — no snow load requirement",
+    hoaRisk: "High — many Oahu subdivisions have active HOAs",
+    permitContact: "Honolulu Department of Planning and Permitting: 808-768-8000",
+    processTip:
+      "Honolulu has one of the most complex permitting processes in Hawaii. Budget extra time — plan review can take 3-6 months for new structures. Hire a local expediter if timeline matters.",
+    specialNotes:
+      "Salt air and high humidity environment — specify corrosion-resistant coatings. High wind zone on north and east shores.",
+  },
+  Maui: {
+    permitRequired: true,
+    permitNotes:
+      "Building permit required through Maui County Department of Public Works. Permits required for all new structures regardless of size.",
+    setbacks:
+      "Varies by zoning district and island location. Agricultural zones may have more flexibility.",
+    windZone: "110-130 mph — higher on exposed ridges and coastal areas",
+    snowLoad: "N/A at sea level — snow possible above 10,000 ft on Haleakala only",
+    hoaRisk: "Moderate — common in resort areas and planned communities",
+    permitContact: "Maui County Department of Public Works: 808-270-7745",
+    processTip:
+      "Agricultural zoning is common on Maui — verify your parcel's zoning before designing. AG-zoned properties have different use and setback rules than residential.",
+    specialNotes:
+      "Wind exposure varies dramatically by location. Kihei and south Maui are drier — north shore and upcountry have more rainfall. Design accordingly.",
+  },
+  "Hawaii County": {
+    permitRequired: true,
+    permitNotes:
+      "Building permit required through Hawaii County Department of Public Works. The Big Island has the most agricultural land of any Hawaiian island — AG zoning is very common.",
+    setbacks:
+      "Varies by zone. Agricultural zones often allow more flexibility than residential.",
+    windZone: "105-120 mph — higher on exposed Kohala and Kona coasts",
+    snowLoad: "N/A at sea level",
+    hoaRisk: "Low to Moderate — less common than Oahu but exists in resort subdivisions",
+    permitContact: "Hawaii County Department of Public Works: 808-961-8321",
+    processTip:
+      "Hawaii County is the most DIY-friendly island for steel building projects. Large agricultural lots, flexible AG zoning, and fewer HOA restrictions make it the easiest permit environment in the state.",
+    specialNotes:
+      "Lava zone designation matters — check your property's lava zone (1-9) before purchasing. Zones 1-2 may affect insurability and financing. Volcanic air (vog) and laze near active vents require additional corrosion protection.",
+  },
+  Kauai: {
+    permitRequired: true,
+    permitNotes:
+      "Building permit required through Kauai County Department of Public Works. Kauai has strict environmental and visual impact regulations.",
+    setbacks:
+      "Varies by zone. Coastal setbacks are strictly enforced — Special Management Area (SMA) rules apply near shorelines.",
+    windZone: "110-130 mph — highest wind exposure of all major islands",
+    snowLoad: "N/A",
+    hoaRisk: "Moderate",
+    permitContact: "Kauai County Department of Public Works: 808-241-4864",
+    processTip:
+      "Kauai has the strictest environmental review process in Hawaii. If your property is near the coast or in a Special Management Area, expect additional review time and requirements. Start permit process early.",
+    specialNotes:
+      "Kauai receives the most rainfall in Hawaii — drainage and foundation design are critical. North shore gets 400+ inches of rain per year in some areas. Specify enhanced corrosion protection for all hardware.",
+  },
+};
+
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: (delay: number = 0) => ({
@@ -212,17 +290,32 @@ function extractEmail(s: string): string | null {
 }
 
 export default function SiteCheckPage() {
+  const [activeTab, setActiveTab] = useState<Tab>("NC");
   const [county, setCounty] = useState<County | "">("");
   const [buildingType, setBuildingType] = useState<BuildingType | "">("");
+  const [hawaiiCounty, setHawaiiCounty] = useState<HawaiiCounty | "">("");
+  const [hawaiiBuildingType, setHawaiiBuildingType] = useState<BuildingType | "">("");
   const [result, setResult] = useState<
-    | { county: County; buildingType: BuildingType; info: CountyInfo }
+    | { county: County; buildingType: BuildingType; info: CountyInfo; isHawaii: false }
+    | { county: HawaiiCounty; buildingType: BuildingType; info: HawaiiCountyInfo; isHawaii: true }
     | null
   >(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleNCSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!county || !buildingType) return;
-    setResult({ county, buildingType, info: countyData[county] });
+    setResult({ county, buildingType, info: countyData[county], isHawaii: false });
+  };
+
+  const handleHawaiiSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!hawaiiCounty || !hawaiiBuildingType) return;
+    setResult({ county: hawaiiCounty, buildingType: hawaiiBuildingType, info: hawaiiCountyData[hawaiiCounty], isHawaii: true });
+  };
+
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab);
+    setResult(null);
   };
 
   return (
@@ -294,94 +387,241 @@ export default function SiteCheckPage() {
         {/* 2. INTERACTIVE CHECKER */}
         <section className="bg-[#f7f5f0] py-16 lg:py-24">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Form card */}
-            <motion.form
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="visible"
-              viewport={viewportOnce}
-              custom={0}
-              onSubmit={handleSubmit}
-              className="bg-white border border-[#0d1b2a]/10 rounded-sm shadow-sm p-6 sm:p-8 lg:p-10"
-              aria-label="NC Build Site Checker"
-            >
-              <div className="grid md:grid-cols-2 gap-5 md:gap-6">
-                <div>
-                  <label
-                    htmlFor="county"
-                    className="block text-xs font-semibold tracking-widest uppercase text-[#0d1b2a]/70 mb-2 font-[family-name:var(--font-inter)]"
-                  >
-                    County
-                  </label>
-                  <select
-                    id="county"
-                    required
-                    value={county}
-                    onChange={(e) => setCounty(e.target.value as County)}
-                    className="w-full h-12 px-4 rounded-sm border border-[#0d1b2a]/15 bg-white text-[#0d1b2a] font-medium font-[family-name:var(--font-inter)] focus:outline-none focus:border-[#C9A96E] focus:ring-2 focus:ring-[#C9A96E]/20 transition-colors"
-                  >
-                    <option value="" disabled>
-                      Select a county…
-                    </option>
-                    {COUNTIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="buildingType"
-                    className="block text-xs font-semibold tracking-widest uppercase text-[#0d1b2a]/70 mb-2 font-[family-name:var(--font-inter)]"
-                  >
-                    Building Type
-                  </label>
-                  <select
-                    id="buildingType"
-                    required
-                    value={buildingType}
-                    onChange={(e) =>
-                      setBuildingType(e.target.value as BuildingType)
-                    }
-                    className="w-full h-12 px-4 rounded-sm border border-[#0d1b2a]/15 bg-white text-[#0d1b2a] font-medium font-[family-name:var(--font-inter)] focus:outline-none focus:border-[#C9A96E] focus:ring-2 focus:ring-[#C9A96E]/20 transition-colors"
-                  >
-                    <option value="" disabled>
-                      Select a building type…
-                    </option>
-                    {BUILDING_TYPES.map((b) => (
-                      <option key={b} value={b}>
-                        {b}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end">
+            {/* Tab Buttons */}
+            <div className="flex justify-center mb-12">
+              <div className="inline-flex rounded-sm border border-[#0d1b2a]/10 bg-white p-1">
                 <button
-                  type="submit"
-                  disabled={!county || !buildingType}
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#C9A96E] hover:bg-[#b8954f] disabled:bg-[#C9A96E]/40 disabled:cursor-not-allowed text-[#0d1b2a] text-base font-bold rounded-sm transition-all duration-200 shadow-md shadow-[#C9A96E]/20 hover:shadow-lg hover:shadow-[#C9A96E]/30 hover:-translate-y-0.5 disabled:shadow-none disabled:hover:translate-y-0"
+                  onClick={() => handleTabChange("NC")}
+                  className={`px-8 py-3 rounded-sm font-semibold text-sm transition-all duration-200 ${
+                    activeTab === "NC"
+                      ? "bg-[#0d1b2a] text-white"
+                      : "text-[#0d1b2a]/70 hover:text-[#0d1b2a]"
+                  }`}
                 >
-                  Check My Site
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M14 5l7 7m0 0l-7 7m7-7H3"
-                    />
-                  </svg>
+                  North Carolina
+                </button>
+                <button
+                  onClick={() => handleTabChange("Hawaii")}
+                  className={`px-8 py-3 rounded-sm font-semibold text-sm transition-all duration-200 ${
+                    activeTab === "Hawaii"
+                      ? "bg-[#0d1b2a] text-white"
+                      : "text-[#0d1b2a]/70 hover:text-[#0d1b2a]"
+                  }`}
+                >
+                  Hawaii
                 </button>
               </div>
-            </motion.form>
+            </div>
+            {/* Form cards with AnimatePresence */}
+            <AnimatePresence mode="wait">
+              {activeTab === "NC" ? (
+                <motion.form
+                  key="nc-form"
+                  variants={fadeUp}
+                  initial="hidden"
+                  animate="visible"
+                  exit={{ opacity: 0, y: -20 }}
+                  custom={0}
+                  onSubmit={handleNCSubmit}
+                  className="bg-white border border-[#0d1b2a]/10 rounded-sm shadow-sm p-6 sm:p-8 lg:p-10"
+                  aria-label="NC Build Site Checker"
+                >
+                  <div className="grid md:grid-cols-2 gap-5 md:gap-6">
+                    <div>
+                      <label
+                        htmlFor="nc-county"
+                        className="block text-xs font-semibold tracking-widest uppercase text-[#0d1b2a]/70 mb-2 font-[family-name:var(--font-inter)]"
+                      >
+                        County
+                      </label>
+                      <select
+                        id="nc-county"
+                        required
+                        value={county}
+                        onChange={(e) => setCounty(e.target.value as County)}
+                        className="w-full h-12 px-4 rounded-sm border border-[#0d1b2a]/15 bg-white text-[#0d1b2a] font-medium font-[family-name:var(--font-inter)] focus:outline-none focus:border-[#C9A96E] focus:ring-2 focus:ring-[#C9A96E]/20 transition-colors"
+                      >
+                        <option value="" disabled>
+                          Select a county…
+                        </option>
+                        {COUNTIES.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="nc-buildingType"
+                        className="block text-xs font-semibold tracking-widest uppercase text-[#0d1b2a]/70 mb-2 font-[family-name:var(--font-inter)]"
+                      >
+                        Building Type
+                      </label>
+                      <select
+                        id="nc-buildingType"
+                        required
+                        value={buildingType}
+                        onChange={(e) =>
+                          setBuildingType(e.target.value as BuildingType)
+                        }
+                        className="w-full h-12 px-4 rounded-sm border border-[#0d1b2a]/15 bg-white text-[#0d1b2a] font-medium font-[family-name:var(--font-inter)] focus:outline-none focus:border-[#C9A96E] focus:ring-2 focus:ring-[#C9A96E]/20 transition-colors"
+                      >
+                        <option value="" disabled>
+                          Select a building type…
+                        </option>
+                        {BUILDING_TYPES.map((b) => (
+                          <option key={b} value={b}>
+                            {b}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={!county || !buildingType}
+                      className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#C9A96E] hover:bg-[#b8954f] disabled:bg-[#C9A96E]/40 disabled:cursor-not-allowed text-[#0d1b2a] text-base font-bold rounded-sm transition-all duration-200 shadow-md shadow-[#C9A96E]/20 hover:shadow-lg hover:shadow-[#C9A96E]/30 hover:-translate-y-0.5 disabled:shadow-none disabled:hover:translate-y-0"
+                    >
+                      Check My Site
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M14 5l7 7m0 0l-7 7m7-7H3"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </motion.form>
+              ) : (
+                <motion.div
+                  key="hawaii-form"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {/* Hawaii Note Box */}
+                  <div className="mb-6 bg-[#C9A96E]/10 border-2 border-[#C9A96E] rounded-sm p-6">
+                    <div className="flex gap-3">
+                      <svg
+                        className="w-6 h-6 text-[#C9A96E] flex-shrink-0 mt-0.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <div>
+                        <h4 className="font-semibold text-[#0d1b2a] mb-2">
+                          Hawaii Building Note
+                        </h4>
+                        <p className="text-[#0d1b2a]/80 text-sm leading-relaxed">
+                          Every Worldwide Steel kit shipped to Hawaii is custom-engineered to meet your county's specific wind load and seismic requirements. Stamped engineering drawings are included for permitting. AAIRE Co. coordinates ocean freight logistics to all major Hawaiian ports.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <form
+                    onSubmit={handleHawaiiSubmit}
+                    className="bg-white border border-[#0d1b2a]/10 rounded-sm shadow-sm p-6 sm:p-8 lg:p-10"
+                    aria-label="Hawaii Build Site Checker"
+                  >
+                    <div className="grid md:grid-cols-2 gap-5 md:gap-6">
+                      <div>
+                        <label
+                          htmlFor="hawaii-county"
+                          className="block text-xs font-semibold tracking-widest uppercase text-[#0d1b2a]/70 mb-2 font-[family-name:var(--font-inter)]"
+                        >
+                          Island / County
+                        </label>
+                        <select
+                          id="hawaii-county"
+                          required
+                          value={hawaiiCounty}
+                          onChange={(e) => setHawaiiCounty(e.target.value as HawaiiCounty)}
+                          className="w-full h-12 px-4 rounded-sm border border-[#0d1b2a]/15 bg-white text-[#0d1b2a] font-medium font-[family-name:var(--font-inter)] focus:outline-none focus:border-[#C9A96E] focus:ring-2 focus:ring-[#C9A96E]/20 transition-colors"
+                        >
+                          <option value="" disabled>
+                            Select an island…
+                          </option>
+                          <option value="Honolulu">Honolulu (Oahu)</option>
+                          <option value="Maui">Maui</option>
+                          <option value="Hawaii County">Hawaii County (Big Island)</option>
+                          <option value="Kauai">Kauai</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="hawaii-buildingType"
+                          className="block text-xs font-semibold tracking-widest uppercase text-[#0d1b2a]/70 mb-2 font-[family-name:var(--font-inter)]"
+                        >
+                          Building Type
+                        </label>
+                        <select
+                          id="hawaii-buildingType"
+                          required
+                          value={hawaiiBuildingType}
+                          onChange={(e) =>
+                            setHawaiiBuildingType(e.target.value as BuildingType)
+                          }
+                          className="w-full h-12 px-4 rounded-sm border border-[#0d1b2a]/15 bg-white text-[#0d1b2a] font-medium font-[family-name:var(--font-inter)] focus:outline-none focus:border-[#C9A96E] focus:ring-2 focus:ring-[#C9A96E]/20 transition-colors"
+                        >
+                          <option value="" disabled>
+                            Select a building type…
+                          </option>
+                          {BUILDING_TYPES.map((b) => (
+                            <option key={b} value={b}>
+                              {b}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={!hawaiiCounty || !hawaiiBuildingType}
+                        className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#C9A96E] hover:bg-[#b8954f] disabled:bg-[#C9A96E]/40 disabled:cursor-not-allowed text-[#0d1b2a] text-base font-bold rounded-sm transition-all duration-200 shadow-md shadow-[#C9A96E]/20 hover:shadow-lg hover:shadow-[#C9A96E]/30 hover:-translate-y-0.5 disabled:shadow-none disabled:hover:translate-y-0"
+                      >
+                        Check My Site
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M14 5l7 7m0 0l-7 7m7-7H3"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </form>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Results */}
             <AnimatePresence mode="wait">
@@ -476,9 +716,11 @@ export default function SiteCheckPage() {
 function Results({
   result,
 }: {
-  result: { county: County; buildingType: BuildingType; info: CountyInfo };
+  result:
+    | { county: County; buildingType: BuildingType; info: CountyInfo; isHawaii: false }
+    | { county: HawaiiCounty; buildingType: BuildingType; info: HawaiiCountyInfo; isHawaii: true };
 }) {
-  const { county, buildingType, info } = result;
+  const { county, buildingType, info, isHawaii } = result;
   const tone = hoaTone(info.hoaRisk);
   const phone = extractPhone(info.permitContact);
   const email = extractEmail(info.permitContact);
@@ -689,6 +931,36 @@ function Results({
           </div>
         </div>
       </motion.div>
+
+      {/* Hawaii Special Notes */}
+      {isHawaii && (
+        <motion.div
+          variants={cardVariants}
+          initial="hidden"
+          animate="visible"
+          custom={7}
+          className="mt-5 sm:mt-6 relative overflow-hidden rounded-sm border border-blue-400 bg-blue-50 p-6 sm:p-8"
+        >
+          <div className="absolute top-0 left-0 bottom-0 w-1 bg-blue-500" />
+          <div className="flex gap-4">
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-blue-100 border border-blue-300 flex items-center justify-center">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-blue-900 font-[family-name:var(--font-playfair)] text-xl font-bold">
+                Special Notes for {county}
+              </h4>
+              <p className="mt-2 text-blue-900/85 text-base leading-relaxed font-[family-name:var(--font-inter)]">
+                {info.specialNotes}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
     </motion.div>
   );
 }
