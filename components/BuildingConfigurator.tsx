@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
 
 // ---------------------------------------------------------------------------
@@ -9,37 +9,43 @@ import Image from "next/image";
 
 type RoofStyle = "gable" | "lean-to";
 type Side = "front" | "back" | "left" | "right";
-type PorchSide = "none" | Side;
 type OpeningType = "garage" | "walk" | "window";
-type ViewMode = "iso" | "front" | "side" | "plan";
+type CornerBehavior = "miter" | "gap";
 
 interface Opening {
   id: number;
   type: OpeningType;
   side: Side;
-  position: number; // feet from front (for left/right) or from left (for front/back)
+  position: number; // feet from front (for left/right walls) or from left (for front/back walls)
   width: number;
   height: number;
+}
+
+interface Porch {
+  id: number;
+  side: Side;
+  depth: number;
+  pitch: number;
+  leftCorner: CornerBehavior;
+  rightCorner: CornerBehavior;
 }
 
 interface BuildingSpec {
   dimensions: { width: number; length: number; eaveHeight: number };
   roof: { style: RoofStyle; pitch: number };
   colors: { roof: string; walls: string; trim: string };
-  porch: { side: Side; depth: number; pitch: number } | null;
+  porches: Array<{ side: Side; depth: number; pitch: number }>;
   openings: Array<{
     type: OpeningType;
     side: Side;
-    position: number;
+    positionFromCorner: number;
     width: number;
     height: number;
   }>;
 }
 
 interface BuildingConfiguratorProps {
-  /** Called when user clicks "Request quote". Receives the full spec payload. */
   onQuoteRequest?: (spec: BuildingSpec) => void;
-  /** Initial state overrides (optional) */
   initialState?: Partial<State>;
 }
 
@@ -52,20 +58,16 @@ interface State {
   roofColorIdx: number;
   wallColorIdx: number;
   trimColorIdx: number;
-  porchSide: PorchSide;
-  porchDepth: number;
-  porchPitch: number;
+  porches: Porch[];
   openings: Opening[];
-  view: ViewMode;
-  nextId: number;
+  nextOpeningId: number;
+  nextPorchId: number;
 }
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-// Worldwide Steel's 18-color palette. Approximate hex values for preview.
-// Verify against actual color chips before going live.
 const COLORS: Array<[string, string]> = [
   ["Crimson Red", "#8E1F25"],
   ["Rustic Red", "#6B2420"],
@@ -93,6 +95,12 @@ const OPENING_DEFAULTS: Record<OpeningType, { width: number; height: number }> =
   window: { width: 3, height: 3 },
 };
 
+const OPENING_LABEL: Record<OpeningType, string> = {
+  garage: "Garage door",
+  walk: "Walk door",
+  window: "Window",
+};
+
 // ---------------------------------------------------------------------------
 // Color utilities
 // ---------------------------------------------------------------------------
@@ -101,10 +109,7 @@ function lighten(hex: string, pct: number): string {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
-  const nr = Math.min(255, Math.round(r + (255 - r) * pct));
-  const ng = Math.min(255, Math.round(g + (255 - g) * pct));
-  const nb = Math.min(255, Math.round(b + (255 - b) * pct));
-  return `rgb(${nr},${ng},${nb})`;
+  return `rgb(${Math.min(255, Math.round(r + (255 - r) * pct))},${Math.min(255, Math.round(g + (255 - g) * pct))},${Math.min(255, Math.round(b + (255 - b) * pct))})`;
 }
 
 function darken(hex: string, pct: number): string {
@@ -112,6 +117,46 @@ function darken(hex: string, pct: number): string {
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   return `rgb(${Math.round(r * (1 - pct))},${Math.round(g * (1 - pct))},${Math.round(b * (1 - pct))})`;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function wallLength(side: Side, width: number, length: number): number {
+  return side === "front" || side === "back" ? length : width;
+}
+
+function clampPosition(opening: Opening, width: number, length: number): number {
+  const max = wallLength(opening.side, width, length) - opening.width;
+  return Math.max(0, Math.min(opening.position, Math.max(0, max)));
+}
+
+function getPlanGeometry(state: State, vbW: number, vbH: number) {
+  let totalW = state.width;
+  let totalL = state.length;
+  let offW = 0;
+  let offL = 0;
+
+  state.porches.forEach((p) => {
+    if (p.side === "front") {
+      totalW += p.depth;
+      offW = Math.max(offW, p.depth);
+    } else if (p.side === "back") {
+      totalW += p.depth;
+    } else if (p.side === "left") {
+      totalL += p.depth;
+      offL = Math.max(offL, p.depth);
+    } else if (p.side === "right") {
+      totalL += p.depth;
+    }
+  });
+
+  const padding = 60;
+  const scale = Math.min((vbW - padding * 2) / totalL, (vbH - padding * 2) / totalW);
+  const px0 = (vbW - totalL * scale) / 2 + offL * scale;
+  const py0 = (vbH - totalW * scale) / 2 + offW * scale;
+  return { px0, py0, scale, totalW, totalL };
 }
 
 // ---------------------------------------------------------------------------
@@ -128,113 +173,158 @@ export default function BuildingConfigurator({
     eave: 14,
     roofStyle: "gable",
     pitch: 4,
-    roofColorIdx: 12, // Burnished Slate
-    wallColorIdx: 6, // Polar White
+    roofColorIdx: 12,
+    wallColorIdx: 6,
     trimColorIdx: 6,
-    porchSide: "none",
-    porchDepth: 10,
-    porchPitch: 2,
+    porches: [],
     openings: [
       { id: 1, type: "garage", side: "front", position: 20, width: 12, height: 12 },
       { id: 2, type: "walk", side: "right", position: 10, width: 3, height: 7 },
       { id: 3, type: "window", side: "left", position: 15, width: 3, height: 3 },
       { id: 4, type: "window", side: "left", position: 45, width: 3, height: 3 },
     ],
-    view: "iso",
-    nextId: 5,
+    nextOpeningId: 5,
+    nextPorchId: 1,
     ...initialState,
   });
 
-  const sideMaxPosition = useCallback(
-    (side: Side) => (side === "front" || side === "back" ? state.width : state.length),
-    [state.width, state.length]
-  );
-
   const clampedOpenings = useMemo(
-    () =>
-      state.openings.map((op) => {
-        const max = (op.side === "front" || op.side === "back" ? state.width : state.length) - op.width;
-        return { ...op, position: Math.max(0, Math.min(op.position, Math.max(0, max))) };
-      }),
+    () => state.openings.map((op) => ({ ...op, position: clampPosition(op, state.width, state.length) })),
     [state.openings, state.width, state.length]
   );
+
+  const openingCounts = useMemo(() => {
+    const counts = { garage: 0, walk: 0, window: 0 };
+    clampedOpenings.forEach((op) => counts[op.type]++);
+    return counts;
+  }, [clampedOpenings]);
 
   const roofHex = COLORS[state.roofColorIdx][1];
   const wallHex = COLORS[state.wallColorIdx][1];
   const trimHex = COLORS[state.trimColorIdx][1];
 
   // -------------------------------------------------------------------------
-  // SVG rendering
+  // Drag
   // -------------------------------------------------------------------------
 
-  const svgContent = useMemo(() => {
-    const W = state.width;
-    const L = state.length;
-    const E = state.eave;
-    const pitch = state.pitch;
-    const ridgeRise = (W / 2) * (pitch / 12);
-    const vbW = 600;
-    const vbH = 460;
+  const planSvgRef = useRef<SVGSVGElement | null>(null);
+  const [dragState, setDragState] = useState<{
+    openingId: number;
+    side: Side;
+    offsetFeet: number;
+  } | null>(null);
 
-    if (state.view === "iso") {
-      return renderIso({ W, L, E, pitch, ridgeRise, state, clampedOpenings, roofHex, wallHex, trimHex, vbW, vbH });
-    }
-    if (state.view === "front") {
-      return renderFront({ W, L, E, pitch, ridgeRise, state, clampedOpenings, roofHex, wallHex, trimHex, vbW, vbH });
-    }
-    if (state.view === "side") {
-      return renderSide({ W, L, E, state, clampedOpenings, roofHex, wallHex, trimHex, vbW, vbH });
-    }
-    return renderPlan({ W, L, state, clampedOpenings, roofHex, wallHex, trimHex, vbW, vbH });
-  }, [state, clampedOpenings, roofHex, wallHex, trimHex]);
+  const updateOpening = useCallback((id: number, patch: Partial<Opening>) => {
+    setState((s) => ({
+      ...s,
+      openings: s.openings.map((op) => (op.id === id ? { ...op, ...patch } : op)),
+    }));
+  }, []);
 
-  const viewHint = useMemo(() => {
-    switch (state.view) {
-      case "iso":
-        return "Isometric preview · not to scale";
-      case "front":
-        return "Front endwall · shows front-facing openings only";
-      case "side":
-        return "Right sidewall · shows right-side openings only";
-      case "plan":
-        return "Top-down plan · all openings visible";
-    }
-  }, [state.view]);
+  useEffect(() => {
+    if (!dragState) return;
 
-  const specReadout = useMemo(() => {
-    const roofLabel = `${state.pitch}:12 ${state.roofStyle}`;
-    const porchLabel = state.porchSide === "none" ? "" : ` · ${state.porchDepth}′ porch ${state.porchSide}`;
-    return `${state.width}′ W × ${state.length}′ L × ${state.eave}′ H · ${roofLabel}${porchLabel}`;
-  }, [state]);
+    const handleMove = (e: PointerEvent) => {
+      const svg = planSvgRef.current;
+      if (!svg) return;
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      const ctm = svg.getScreenCTM();
+      if (!ctm) return;
+      const svgPoint = pt.matrixTransform(ctm.inverse());
+      const { px0, py0, scale } = getPlanGeometry(state, 600, 380);
+      const opening = state.openings.find((o) => o.id === dragState.openingId);
+      if (!opening) return;
+
+      let positionFeet = 0;
+      if (dragState.side === "front" || dragState.side === "back") positionFeet = (svgPoint.x - px0) / scale;
+      else positionFeet = (svgPoint.y - py0) / scale;
+
+      positionFeet -= dragState.offsetFeet;
+
+      const wall = wallLength(dragState.side, state.width, state.length);
+      const clamped = Math.max(0, Math.min(positionFeet, wall - opening.width));
+      updateOpening(dragState.openingId, { position: Math.round(clamped * 10) / 10 });
+    };
+
+    const handleUp = () => setDragState(null);
+
+    document.addEventListener("pointermove", handleMove);
+    document.addEventListener("pointerup", handleUp);
+    document.addEventListener("pointercancel", handleUp);
+    return () => {
+      document.removeEventListener("pointermove", handleMove);
+      document.removeEventListener("pointerup", handleUp);
+      document.removeEventListener("pointercancel", handleUp);
+    };
+  }, [dragState, state, updateOpening]);
+
+  const handleOpeningPointerDown = (e: React.PointerEvent<SVGElement>, opening: Opening) => {
+    e.preventDefault();
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+    const svg = planSvgRef.current;
+    if (!svg) return;
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return;
+    const svgPoint = pt.matrixTransform(ctm.inverse());
+    const { px0, py0, scale } = getPlanGeometry(state, 600, 380);
+
+    let pointerFeet = 0;
+    if (opening.side === "front" || opening.side === "back") pointerFeet = (svgPoint.x - px0) / scale;
+    else pointerFeet = (svgPoint.y - py0) / scale;
+
+    setDragState({
+      openingId: opening.id,
+      side: opening.side,
+      offsetFeet: pointerFeet - opening.position,
+    });
+  };
 
   // -------------------------------------------------------------------------
   // Handlers
   // -------------------------------------------------------------------------
-
-  const updateOpening = (id: number, field: "side" | "position", value: string | number) => {
-    setState((s) => ({
-      ...s,
-      openings: s.openings.map((op) => {
-        if (op.id !== id) return op;
-        if (field === "side") return { ...op, side: value as Side };
-        return { ...op, position: Math.max(0, Number(value) || 0) };
-      }),
-    }));
-  };
-
-  const removeOpening = (id: number) => {
-    setState((s) => ({ ...s, openings: s.openings.filter((o) => o.id !== id) }));
-  };
 
   const addOpening = (type: OpeningType) => {
     const side: Side = type === "garage" ? "front" : type === "walk" ? "right" : "left";
     const d = OPENING_DEFAULTS[type];
     setState((s) => ({
       ...s,
-      openings: [...s.openings, { id: s.nextId, type, side, position: 5, width: d.width, height: d.height }],
-      nextId: s.nextId + 1,
+      openings: [...s.openings, { id: s.nextOpeningId, type, side, position: 5, width: d.width, height: d.height }],
+      nextOpeningId: s.nextOpeningId + 1,
     }));
   };
+
+  const removeOpening = (id: number) => setState((s) => ({ ...s, openings: s.openings.filter((o) => o.id !== id) }));
+
+  const changeOpeningSide = (id: number, side: Side) => {
+    setState((s) => ({
+      ...s,
+      openings: s.openings.map((o) => (o.id === id ? { ...o, side, position: 0 } : o)),
+    }));
+  };
+
+  const addPorch = () => {
+    setState((s) => {
+      const used = new Set(s.porches.map((p) => p.side));
+      const available: Side[] = (["front", "back", "left", "right"] as Side[]).filter((sd) => !used.has(sd));
+      if (available.length === 0) return s;
+      return {
+        ...s,
+        porches: [...s.porches, { id: s.nextPorchId, side: available[0], depth: 10, pitch: 2, leftCorner: "gap", rightCorner: "gap" }],
+        nextPorchId: s.nextPorchId + 1,
+      };
+    });
+  };
+
+  const updatePorch = (id: number, patch: Partial<Porch>) => {
+    setState((s) => ({ ...s, porches: s.porches.map((p) => (p.id === id ? { ...p, ...patch } : p)) }));
+  };
+
+  const removePorch = (id: number) => setState((s) => ({ ...s, porches: s.porches.filter((p) => p.id !== id) }));
 
   const handleQuote = () => {
     const spec: BuildingSpec = {
@@ -245,14 +335,11 @@ export default function BuildingConfigurator({
         walls: COLORS[state.wallColorIdx][0],
         trim: COLORS[state.trimColorIdx][0],
       },
-      porch:
-        state.porchSide === "none"
-          ? null
-          : { side: state.porchSide as Side, depth: state.porchDepth, pitch: state.porchPitch },
+      porches: state.porches.map((p) => ({ side: p.side, depth: p.depth, pitch: p.pitch })),
       openings: clampedOpenings.map((o) => ({
         type: o.type,
         side: o.side,
-        position: o.position,
+        positionFromCorner: Math.round(o.position * 10) / 10,
         width: o.width,
         height: o.height,
       })),
@@ -260,100 +347,78 @@ export default function BuildingConfigurator({
     onQuoteRequest?.(spec);
   };
 
+  const availablePorchSides = useMemo(() => {
+    const used = new Set(state.porches.map((p) => p.side));
+    return (["front", "back", "left", "right"] as Side[]).filter((sd) => !used.has(sd));
+  }, [state.porches]);
+
   // -------------------------------------------------------------------------
   // Render
   // -------------------------------------------------------------------------
 
   return (
-    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.4fr_1fr]">
-      {/* Preview pane */}
-      <div className="relative flex min-h-[520px] flex-col rounded-xl bg-neutral-100 p-4 dark:bg-neutral-900 lg:sticky lg:top-4">
-        {/* Logo watermark — light logo on dark mode, dark logo on light mode */}
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.5fr_1fr]">
+      <div className="relative flex min-h-[560px] flex-col gap-3 rounded-xl bg-neutral-100 p-4 dark:bg-neutral-900 lg:sticky lg:top-4">
         <div className="pointer-events-none absolute bottom-4 right-4 opacity-20 dark:opacity-30">
-          <Image
-            src="/images/logos/aaire-logo-black.png"
-            alt=""
-            width={56}
-            height={56}
-            className="block dark:hidden"
-            priority={false}
-          />
-          <Image
-            src="/images/logos/aaire-logo-white.jpg"
-            alt=""
-            width={56}
-            height={56}
-            className="hidden dark:block"
-            priority={false}
-          />
+          <Image src="/images/logos/aaire-logo-black.png" alt="" width={48} height={48} className="block dark:hidden" />
+          <Image src="/images/logos/aaire-logo-white.jpg" alt="" width={48} height={48} className="hidden dark:block" />
         </div>
 
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <span className="font-mono text-xs tabular-nums text-neutral-600 dark:text-neutral-400">
-            {specReadout}
-          </span>
-          <div className="flex flex-shrink-0 gap-1">
-            {(["iso", "front", "side", "plan"] as ViewMode[]).map((v) => (
-              <button
-                key={v}
-                onClick={() => setState((s) => ({ ...s, view: v }))}
-                className={`rounded-md px-2.5 py-1 text-xs capitalize transition-colors ${
-                  state.view === v
-                    ? "border border-neutral-400 bg-white dark:border-neutral-500 dark:bg-neutral-800"
-                    : "border border-neutral-300 bg-transparent hover:bg-white/50 dark:border-neutral-700 dark:hover:bg-neutral-800/50"
-                }`}
-              >
-                {v}
-              </button>
-            ))}
+        <div className="flex flex-col rounded-lg bg-white/60 p-2 dark:bg-neutral-950/40">
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-[11px] uppercase tracking-wide text-neutral-500 dark:text-neutral-500">Preview</span>
+            <span className="font-mono text-[11px] tabular-nums text-neutral-600 dark:text-neutral-400">
+              {state.width}&prime; W × {state.length}&prime; L × {state.eave}&prime; H · {state.pitch}:12 {state.roofStyle}
+            </span>
           </div>
-        </div>
-
-        <div className="flex flex-1 items-center justify-center">
           <svg
-            viewBox="0 0 600 460"
-            className="h-auto max-h-[480px] w-full"
+            viewBox="0 0 600 180"
+            className="h-[180px] w-full"
             role="img"
-            aria-label="Building preview"
-            dangerouslySetInnerHTML={{ __html: svgContent }}
+            aria-label="Isometric preview"
+            dangerouslySetInnerHTML={{ __html: renderIso({ state, clampedOpenings, roofHex, wallHex, trimHex, vbW: 600, vbH: 180 }) }}
           />
         </div>
 
-        <p className="mt-1 text-center text-[11px] text-neutral-500 dark:text-neutral-500">{viewHint}</p>
+        <div className="flex flex-1 flex-col rounded-lg bg-white/60 p-2 dark:bg-neutral-950/40">
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-[11px] uppercase tracking-wide text-neutral-500 dark:text-neutral-500">
+              Plan · drag to reposition
+            </span>
+            {dragState && (
+              <span className="font-mono text-[11px] tabular-nums text-neutral-600 dark:text-neutral-400">dragging…</span>
+            )}
+          </div>
+          <svg
+            ref={planSvgRef}
+            viewBox="0 0 600 380"
+            className="h-auto max-h-[480px] w-full touch-none select-none"
+            role="img"
+            aria-label="Plan view"
+          >
+            <PlanViewSvg
+              state={state}
+              clampedOpenings={clampedOpenings}
+              roofHex={roofHex}
+              wallHex={wallHex}
+              trimHex={trimHex}
+              vbW={600}
+              vbH={380}
+              onOpeningPointerDown={handleOpeningPointerDown}
+              draggingId={dragState?.openingId ?? null}
+            />
+          </svg>
+        </div>
       </div>
 
-      {/* Controls */}
       <div className="flex flex-col gap-4">
-        {/* Dimensions */}
         <section>
           <p className="mb-2.5 text-sm font-medium">Dimensions</p>
-          <SliderRow
-            label="Width"
-            min={12}
-            max={80}
-            step={1}
-            value={state.width}
-            onChange={(v) => setState((s) => ({ ...s, width: v }))}
-          />
-          <SliderRow
-            label="Length"
-            min={20}
-            max={200}
-            step={5}
-            value={state.length}
-            onChange={(v) => setState((s) => ({ ...s, length: v }))}
-          />
-          <SliderRow
-            label="Eave"
-            min={8}
-            max={30}
-            step={1}
-            value={state.eave}
-            onChange={(v) => setState((s) => ({ ...s, eave: v }))}
-          />
+          <SliderRow label="Width" min={12} max={80} step={1} value={state.width} onChange={(v) => setState((s) => ({ ...s, width: v }))} />
+          <SliderRow label="Length" min={20} max={200} step={5} value={state.length} onChange={(v) => setState((s) => ({ ...s, length: v }))} />
+          <SliderRow label="Height" min={8} max={30} step={1} value={state.eave} onChange={(v) => setState((s) => ({ ...s, eave: v }))} />
         </section>
 
-        {/* Roof */}
         <section>
           <p className="mb-2.5 text-sm font-medium">Roof</p>
           <div className="mb-2.5 flex gap-1.5">
@@ -372,7 +437,7 @@ export default function BuildingConfigurator({
             ))}
           </div>
           <div className="flex items-center gap-2.5">
-            <label className="w-13 text-[13px] text-neutral-600 dark:text-neutral-400">Pitch</label>
+            <label className="w-14 text-[13px] text-neutral-600 dark:text-neutral-400">Pitch</label>
             <select
               value={state.pitch}
               onChange={(e) => setState((s) => ({ ...s, pitch: parseFloat(e.target.value) }))}
@@ -387,115 +452,150 @@ export default function BuildingConfigurator({
           </div>
         </section>
 
-        {/* Colors */}
         <section>
           <p className="mb-2.5 text-sm font-medium">Colors</p>
-          <ColorRow
-            label="Roof"
-            selectedIdx={state.roofColorIdx}
-            onChange={(i) => setState((s) => ({ ...s, roofColorIdx: i }))}
-          />
-          <ColorRow
-            label="Walls"
-            selectedIdx={state.wallColorIdx}
-            onChange={(i) => setState((s) => ({ ...s, wallColorIdx: i }))}
-          />
-          <ColorRow
-            label="Trim"
-            selectedIdx={state.trimColorIdx}
-            onChange={(i) => setState((s) => ({ ...s, trimColorIdx: i }))}
-            isLast
-          />
+          <ColorRow label="Roof" selectedIdx={state.roofColorIdx} onChange={(i) => setState((s) => ({ ...s, roofColorIdx: i }))} />
+          <ColorRow label="Walls" selectedIdx={state.wallColorIdx} onChange={(i) => setState((s) => ({ ...s, wallColorIdx: i }))} />
+          <ColorRow label="Trim" selectedIdx={state.trimColorIdx} onChange={(i) => setState((s) => ({ ...s, trimColorIdx: i }))} isLast />
         </section>
 
-        {/* Porch */}
         <section>
-          <p className="mb-2.5 text-sm font-medium">Porch / lean-to extension</p>
-          <div className="mb-2.5 flex flex-wrap gap-1">
-            {(["none", "front", "back", "left", "right"] as PorchSide[]).map((side) => (
-              <button
-                key={side}
-                onClick={() => setState((s) => ({ ...s, porchSide: side }))}
-                className={`flex-1 rounded-md px-2 py-1.5 text-xs capitalize transition-colors ${
-                  state.porchSide === side
-                    ? "border border-neutral-400 bg-white dark:border-neutral-500 dark:bg-neutral-800"
-                    : "border border-neutral-300 bg-transparent hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800/50"
-                }`}
-              >
-                {side}
-              </button>
+          <div className="mb-2.5 flex items-baseline justify-between">
+            <p className="text-sm font-medium">Porches</p>
+            <span className="text-[11px] text-neutral-500 dark:text-neutral-500">{state.porches.length}/4 sides</span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {state.porches.length === 0 && (
+              <p className="my-1 text-xs italic text-neutral-500 dark:text-neutral-500">No porches — add one below.</p>
+            )}
+            {state.porches.map((p) => (
+              <div key={p.id} className="flex flex-col gap-1.5 rounded-md bg-neutral-100 p-2 dark:bg-neutral-900">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium capitalize">{p.side} porch</span>
+                  <button
+                    onClick={() => removePorch(p.id)}
+                    className="h-[22px] w-[22px] rounded-md border border-neutral-300 bg-transparent text-sm leading-none text-neutral-500 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="grid grid-cols-[1fr_1fr] gap-1.5">
+                  <select
+                    value={p.side}
+                    onChange={(e) => {
+                      const newSide = e.target.value as Side;
+                      if (state.porches.some((other) => other.id !== p.id && other.side === newSide)) return;
+                      updatePorch(p.id, { side: newSide });
+                    }}
+                    className="rounded-md border border-neutral-300 bg-white px-1.5 py-1 text-xs dark:border-neutral-700 dark:bg-neutral-800"
+                  >
+                    {(["front", "back", "left", "right"] as Side[]).map((sd) => {
+                      const taken = state.porches.some((other) => other.id !== p.id && other.side === sd);
+                      return (
+                        <option key={sd} value={sd} disabled={taken}>
+                          {sd}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <select
+                    value={p.pitch}
+                    onChange={(e) => updatePorch(p.id, { pitch: parseFloat(e.target.value) })}
+                    className="rounded-md border border-neutral-300 bg-white px-1.5 py-1 text-xs dark:border-neutral-700 dark:bg-neutral-800"
+                  >
+                    <option value={1}>1:12 pitch</option>
+                    <option value={2}>2:12 pitch</option>
+                    <option value={3}>3:12 pitch</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-[11px] text-neutral-600 dark:text-neutral-400">Depth</label>
+                  <input
+                    type="range"
+                    min={6}
+                    max={20}
+                    step={1}
+                    value={p.depth}
+                    onChange={(e) => updatePorch(p.id, { depth: parseInt(e.target.value, 10) })}
+                    className="flex-1"
+                  />
+                  <span className="min-w-[28px] text-right text-[11px] font-medium tabular-nums">{p.depth}&prime;</span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-[11px] text-neutral-600 dark:text-neutral-400">Left corner:</label>
+                    <select
+                      value={p.leftCorner}
+                      onChange={(e) => updatePorch(p.id, { leftCorner: e.target.value as CornerBehavior })}
+                      className="rounded-md border border-neutral-300 bg-white px-1 py-0.5 text-[11px] dark:border-neutral-700 dark:bg-neutral-800"
+                    >
+                      <option value="gap">gap</option>
+                      <option value="miter">miter</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-[11px] text-neutral-600 dark:text-neutral-400">Right:</label>
+                    <select
+                      value={p.rightCorner}
+                      onChange={(e) => updatePorch(p.id, { rightCorner: e.target.value as CornerBehavior })}
+                      className="rounded-md border border-neutral-300 bg-white px-1 py-0.5 text-[11px] dark:border-neutral-700 dark:bg-neutral-800"
+                    >
+                      <option value="gap">gap</option>
+                      <option value="miter">miter</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
-          {state.porchSide !== "none" && (
-            <>
-              <SliderRow
-                label="Depth"
-                min={6}
-                max={20}
-                step={1}
-                value={state.porchDepth}
-                onChange={(v) => setState((s) => ({ ...s, porchDepth: v }))}
-              />
-              <div className="flex items-center gap-2.5">
-                <label className="w-13 text-[13px] text-neutral-600 dark:text-neutral-400">Pitch</label>
-                <select
-                  value={state.porchPitch}
-                  onChange={(e) => setState((s) => ({ ...s, porchPitch: parseFloat(e.target.value) }))}
-                  className="flex-1 rounded-md border border-neutral-300 bg-white px-2 py-1.5 text-[13px] dark:border-neutral-700 dark:bg-neutral-800"
-                >
-                  <option value={1}>1:12</option>
-                  <option value={2}>2:12</option>
-                  <option value={3}>3:12</option>
-                </select>
-              </div>
-            </>
+          {availablePorchSides.length > 0 && (
+            <button
+              onClick={addPorch}
+              className="mt-2 w-full rounded-md border border-neutral-300 bg-transparent px-2 py-1.5 text-xs hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800/50"
+            >
+              + Add porch
+            </button>
           )}
         </section>
 
-        {/* Openings */}
         <section>
           <div className="mb-2.5 flex items-baseline justify-between">
             <p className="text-sm font-medium">Openings</p>
-            <span className="text-[11px] text-neutral-500 dark:text-neutral-500">Plan view shows positions</span>
+            <span className="text-[11px] text-neutral-500 dark:text-neutral-500">
+              {openingCounts.garage > 0 && `${openingCounts.garage} garage`}
+              {openingCounts.garage > 0 && (openingCounts.walk > 0 || openingCounts.window > 0) && " · "}
+              {openingCounts.walk > 0 && `${openingCounts.walk} walk`}
+              {openingCounts.walk > 0 && openingCounts.window > 0 && " · "}
+              {openingCounts.window > 0 && `${openingCounts.window} window${openingCounts.window > 1 ? "s" : ""}`}
+              {clampedOpenings.length === 0 && "Drag to position"}
+            </span>
           </div>
           <div className="flex flex-col gap-1.5">
             {clampedOpenings.length === 0 ? (
-              <p className="my-1 text-xs italic text-neutral-500 dark:text-neutral-500">
-                No openings yet — add doors and windows below.
-              </p>
+              <p className="my-1 text-xs italic text-neutral-500 dark:text-neutral-500">No openings yet.</p>
             ) : (
               clampedOpenings.map((op) => (
-                <div
-                  key={op.id}
-                  className="grid grid-cols-[72px_1fr_1fr_28px] items-center gap-1.5 rounded-md bg-neutral-100 p-2 dark:bg-neutral-900"
-                >
-                  <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                    {op.type === "garage" ? `Garage ${op.width}×${op.height}` : op.type === "walk" ? "Walk door" : "Window"}
+                <div key={op.id} className="grid grid-cols-[1fr_auto_auto_26px] items-center gap-1.5 rounded-md bg-neutral-100 p-2 dark:bg-neutral-900">
+                  <span className="truncate text-xs text-neutral-700 dark:text-neutral-300">
+                    {OPENING_LABEL[op.type]}
+                    {op.type === "garage" ? ` ${op.width}×${op.height}` : ""}
                   </span>
                   <select
                     value={op.side}
-                    onChange={(e) => updateOpening(op.id, "side", e.target.value)}
-                    className="w-full rounded-md border border-neutral-300 bg-white px-1.5 py-1 text-xs dark:border-neutral-700 dark:bg-neutral-800"
+                    onChange={(e) => changeOpeningSide(op.id, e.target.value as Side)}
+                    className="rounded-md border border-neutral-300 bg-white px-1 py-0.5 text-[11px] dark:border-neutral-700 dark:bg-neutral-800"
                   >
                     <option value="front">Front</option>
                     <option value="back">Back</option>
                     <option value="left">Left</option>
                     <option value="right">Right</option>
                   </select>
-                  <input
-                    type="number"
-                    min={0}
-                    max={sideMaxPosition(op.side)}
-                    step={1}
-                    value={op.position}
-                    onChange={(e) => updateOpening(op.id, "position", e.target.value)}
-                    title="Feet from left/front corner"
-                    className="w-full rounded-md border border-neutral-300 bg-white px-1.5 py-1 text-xs dark:border-neutral-700 dark:bg-neutral-800"
-                  />
+                  <span className="font-mono text-[11px] tabular-nums text-neutral-600 dark:text-neutral-400" title="Feet from corner">
+                    {Math.round(op.position * 10) / 10}&prime;
+                  </span>
                   <button
                     onClick={() => removeOpening(op.id)}
                     className="h-[26px] w-[26px] rounded-md border border-neutral-300 bg-transparent text-sm leading-none text-neutral-500 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
-                    title="Remove"
                   >
                     ×
                   </button>
@@ -510,7 +610,7 @@ export default function BuildingConfigurator({
                 onClick={() => addOpening(type)}
                 className="flex-1 rounded-md border border-neutral-300 bg-transparent px-2 py-1.5 text-xs hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800/50"
               >
-                + {type === "garage" ? "Garage door" : type === "walk" ? "Walk door" : "Window"}
+                + {OPENING_LABEL[type]}
               </button>
             ))}
           </div>
@@ -548,16 +648,8 @@ function SliderRow({
 }) {
   return (
     <div className="mb-2.5 flex items-center gap-2.5">
-      <label className="w-13 text-[13px] text-neutral-600 dark:text-neutral-400">{label}</label>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(parseInt(e.target.value, 10))}
-        className="flex-1"
-      />
+      <label className="w-14 text-[13px] text-neutral-600 dark:text-neutral-400">{label}</label>
+      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(parseInt(e.target.value, 10))} className="flex-1" />
       <span className="min-w-[42px] text-right text-[13px] font-medium tabular-nums">{value}&prime;</span>
     </div>
   );
@@ -586,12 +678,7 @@ function ColorRow({
               title={col[0]}
               onClick={() => onChange(i)}
               className="h-[22px] w-[22px] rounded-full p-0 transition-transform"
-              style={{
-                background: col[1],
-                border: selected
-                  ? "2px solid currentColor"
-                  : "1px solid rgba(128,128,128,0.3)",
-              }}
+              style={{ background: col[1], border: selected ? "2px solid currentColor" : "1px solid rgba(128,128,128,0.3)" }}
             />
           );
         })}
@@ -600,16 +687,104 @@ function ColorRow({
   );
 }
 
+interface PlanViewProps {
+  state: State;
+  clampedOpenings: Opening[];
+  roofHex: string;
+  wallHex: string;
+  trimHex: string;
+  vbW: number;
+  vbH: number;
+  onOpeningPointerDown: (e: React.PointerEvent<SVGElement>, op: Opening) => void;
+  draggingId: number | null;
+}
+
+function PlanViewSvg({ state, clampedOpenings, roofHex, wallHex, trimHex, vbW, vbH, onOpeningPointerDown, draggingId }: PlanViewProps) {
+  const { px0, py0, scale } = getPlanGeometry(state, vbW, vbH);
+  const W = state.width;
+  const L = state.length;
+
+  return (
+    <>
+      {state.porches.map((p) => {
+        let prx = 0, pry = 0, prw = 0, prh = 0;
+        if (p.side === "front") { prx = px0; pry = py0 - p.depth * scale; prw = L * scale; prh = p.depth * scale; }
+        else if (p.side === "back") { prx = px0; pry = py0 + W * scale; prw = L * scale; prh = p.depth * scale; }
+        else if (p.side === "left") { prx = px0 - p.depth * scale; pry = py0; prw = p.depth * scale; prh = W * scale; }
+        else if (p.side === "right") { prx = px0 + L * scale; pry = py0; prw = p.depth * scale; prh = W * scale; }
+
+        return (
+          <g key={p.id}>
+            <rect x={prx} y={pry} width={prw} height={prh} fill={lighten(roofHex, 0.55)} stroke={darken(roofHex, 0.2)} strokeWidth={0.8} strokeDasharray="4,3" opacity={0.55} />
+            <text x={prx + prw / 2} y={pry + prh / 2} fontSize={11} fill="rgba(100,100,100,0.9)" textAnchor="middle" dominantBaseline="middle" fontFamily="inherit">
+              {p.depth}&prime; porch
+            </text>
+          </g>
+        );
+      })}
+
+      <rect x={px0} y={py0} width={L * scale} height={W * scale} fill={lighten(wallHex, 0.2)} stroke={darken(wallHex, 0.3)} strokeWidth={1.2} />
+      {state.roofStyle === "gable" && (
+        <line x1={px0} y1={py0 + (W * scale) / 2} x2={px0 + L * scale} y2={py0 + (W * scale) / 2} stroke={darken(wallHex, 0.3)} strokeWidth={0.5} strokeDasharray="4,3" />
+      )}
+
+      <text x={px0 + (L * scale) / 2} y={py0 - 14} fontSize={11} fill="rgba(100,100,100,0.8)" textAnchor="middle" fontFamily="inherit">FRONT · {L}&prime;</text>
+      <text x={px0 + (L * scale) / 2} y={py0 + W * scale + 22} fontSize={11} fill="rgba(100,100,100,0.8)" textAnchor="middle" fontFamily="inherit">BACK</text>
+      <text x={px0 - 14} y={py0 + (W * scale) / 2} fontSize={11} fill="rgba(100,100,100,0.8)" textAnchor="end" dominantBaseline="middle" fontFamily="inherit">LEFT · {W}&prime;</text>
+      <text x={px0 + L * scale + 14} y={py0 + (W * scale) / 2} fontSize={11} fill="rgba(100,100,100,0.8)" textAnchor="start" dominantBaseline="middle" fontFamily="inherit">RIGHT</text>
+
+      {clampedOpenings.map((op) => {
+        const thickness = Math.max(4, scale * 1.2);
+        const fill = op.type === "window" ? "#8FB8D4" : trimHex;
+        let ox = 0, oy = 0, ow = 0, oh = 0;
+        if (op.side === "front") { ox = px0 + op.position * scale; oy = py0 - thickness / 2; ow = op.width * scale; oh = thickness; }
+        else if (op.side === "back") { ox = px0 + op.position * scale; oy = py0 + W * scale - thickness / 2; ow = op.width * scale; oh = thickness; }
+        else if (op.side === "left") { ox = px0 - thickness / 2; oy = py0 + op.position * scale; ow = thickness; oh = op.width * scale; }
+        else if (op.side === "right") { ox = px0 + L * scale - thickness / 2; oy = py0 + op.position * scale; ow = thickness; oh = op.width * scale; }
+
+        const isDragging = draggingId === op.id;
+        let lx = ox + ow / 2;
+        let ly = oy + oh / 2;
+        let anchor: "start" | "middle" | "end" = "middle";
+        let baseline: "hanging" | "middle" | "auto" = "middle";
+        const labelOffset = 16;
+        if (op.side === "front") { ly = oy - labelOffset; baseline = "auto"; }
+        else if (op.side === "back") { ly = oy + oh + labelOffset; baseline = "hanging"; }
+        else if (op.side === "left") { lx = ox - labelOffset; anchor = "end"; }
+        else if (op.side === "right") { lx = ox + ow + labelOffset; anchor = "start"; }
+
+        const fromLabel = op.side === "front" || op.side === "back" ? "left" : "front";
+
+        return (
+          <g key={op.id}>
+            <rect
+              x={ox}
+              y={oy}
+              width={ow}
+              height={oh}
+              fill={fill}
+              stroke={isDragging ? "#000" : darken(op.type === "window" ? "#5C8BA8" : trimHex, 0.3)}
+              strokeWidth={isDragging ? 1.5 : 0.5}
+              style={{ cursor: "grab" }}
+              onPointerDown={(e) => onOpeningPointerDown(e, op)}
+            />
+            {isDragging && (
+              <text x={lx} y={ly} fontSize={11} fill="rgba(30,30,30,0.95)" textAnchor={anchor} dominantBaseline={baseline} fontFamily="inherit" fontWeight={500}>
+                {Math.round(op.position * 10) / 10}&prime; from {fromLabel}
+              </text>
+            )}
+          </g>
+        );
+      })}
+    </>
+  );
+}
+
 // ---------------------------------------------------------------------------
-// SVG view renderers — pure functions, return SVG markup strings
+// Iso renderer
 // ---------------------------------------------------------------------------
 
-interface IsoRenderArgs {
-  W: number;
-  L: number;
-  E: number;
-  pitch: number;
-  ridgeRise: number;
+interface IsoArgs {
   state: State;
   clampedOpenings: Opening[];
   roofHex: string;
@@ -619,20 +794,13 @@ interface IsoRenderArgs {
   vbH: number;
 }
 
-function renderIso({
-  W,
-  L,
-  E,
-  pitch,
-  ridgeRise,
-  state,
-  clampedOpenings,
-  roofHex,
-  wallHex,
-  trimHex,
-  vbW,
-  vbH,
-}: IsoRenderArgs): string {
+function renderIso({ state, clampedOpenings, roofHex, wallHex, trimHex, vbW, vbH }: IsoArgs): string {
+  const W = state.width;
+  const L = state.length;
+  const E = state.eave;
+  const pitch = state.pitch;
+  const ridgeRise = (W / 2) * (pitch / 12);
+
   const isoRaw = (x: number, y: number, z: number): [number, number] => [(x - z) * 0.866, (x + z) * 0.5 - y];
 
   const peakY = state.roofStyle === "lean-to" ? E + (W * pitch) / 12 : E + ridgeRise;
@@ -640,24 +808,16 @@ function renderIso({
     isoRaw(0, 0, 0), isoRaw(W, 0, 0), isoRaw(0, 0, L), isoRaw(W, 0, L),
     isoRaw(0, E, 0), isoRaw(W, E, 0), isoRaw(0, E, L), isoRaw(W, E, L),
   ];
-  if (state.roofStyle === "lean-to") {
-    corners.push(isoRaw(0, peakY, 0), isoRaw(0, peakY, L));
-  } else {
-    corners.push(isoRaw(W / 2, peakY, 0), isoRaw(W / 2, peakY, L));
-  }
+  if (state.roofStyle === "lean-to") corners.push(isoRaw(0, peakY, 0), isoRaw(0, peakY, L));
+  else corners.push(isoRaw(W / 2, peakY, 0), isoRaw(W / 2, peakY, L));
 
-  if (state.porchSide !== "none") {
-    const pd = state.porchDepth;
-    if (state.porchSide === "front") {
-      corners.push(isoRaw(-pd, 0, 0), isoRaw(-pd, 0, L), isoRaw(-pd, E - 2, 0), isoRaw(-pd, E - 2, L));
-    } else if (state.porchSide === "back") {
-      corners.push(isoRaw(W + pd, 0, 0), isoRaw(W + pd, 0, L), isoRaw(W + pd, E - 2, 0), isoRaw(W + pd, E - 2, L));
-    } else if (state.porchSide === "left") {
-      corners.push(isoRaw(0, 0, -pd), isoRaw(W, 0, -pd), isoRaw(0, E - 2, -pd), isoRaw(W, E - 2, -pd));
-    } else if (state.porchSide === "right") {
-      corners.push(isoRaw(0, 0, L + pd), isoRaw(W, 0, L + pd), isoRaw(0, E - 2, L + pd), isoRaw(W, E - 2, L + pd));
-    }
-  }
+  state.porches.forEach((p) => {
+    const pd = p.depth;
+    if (p.side === "front") corners.push(isoRaw(-pd, 0, 0), isoRaw(-pd, 0, L), isoRaw(-pd, E - 2, 0), isoRaw(-pd, E - 2, L));
+    else if (p.side === "back") corners.push(isoRaw(W + pd, 0, 0), isoRaw(W + pd, 0, L), isoRaw(W + pd, E - 2, 0), isoRaw(W + pd, E - 2, L));
+    else if (p.side === "left") corners.push(isoRaw(0, 0, -pd), isoRaw(W, 0, -pd), isoRaw(0, E - 2, -pd), isoRaw(W, E - 2, -pd));
+    else if (p.side === "right") corners.push(isoRaw(0, 0, L + pd), isoRaw(W, 0, L + pd), isoRaw(0, E - 2, L + pd), isoRaw(W, E - 2, L + pd));
+  });
 
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   corners.forEach(([x, y]) => {
@@ -666,12 +826,10 @@ function renderIso({
     if (y < minY) minY = y;
     if (y > maxY) maxY = y;
   });
-  const spanX = maxX - minX;
-  const spanY = maxY - minY;
-  const padding = 40;
-  const scale = Math.min((vbW - padding * 2) / spanX, (vbH - padding * 2) / spanY);
-  const offX = (vbW - spanX * scale) / 2 - minX * scale;
-  const offY = (vbH - spanY * scale) / 2 - minY * scale;
+  const padding = 20;
+  const scale = Math.min((vbW - padding * 2) / (maxX - minX), (vbH - padding * 2) / (maxY - minY));
+  const offX = (vbW - (maxX - minX) * scale) / 2 - minX * scale;
+  const offY = (vbH - (maxY - minY) * scale) / 2 - minY * scale;
   const iso = (x: number, y: number, z: number): [number, number] => {
     const [rx, ry] = isoRaw(x, y, z);
     return [rx * scale + offX, ry * scale + offY];
@@ -679,32 +837,30 @@ function renderIso({
 
   let content = "";
 
-  // Porch roof (drawn first so building occludes its back edge)
-  if (state.porchSide !== "none") {
-    const pd = state.porchDepth;
-    const pe = 2; // eave drop
+  state.porches.forEach((p) => {
+    const pd = p.depth;
+    const pe = 2;
     let pr: [number, number][] = [];
     let posts: Array<[[number, number], [number, number]]> = [];
-    if (state.porchSide === "front") {
+    if (p.side === "front") {
       pr = [iso(-pd, E - pe, 0), iso(-pd, E - pe, L), iso(0, E, L), iso(0, E, 0)];
       posts = [[iso(-pd, 0, 0), iso(-pd, E - pe, 0)], [iso(-pd, 0, L), iso(-pd, E - pe, L)]];
-    } else if (state.porchSide === "back") {
+    } else if (p.side === "back") {
       pr = [iso(W, E, 0), iso(W, E, L), iso(W + pd, E - pe, L), iso(W + pd, E - pe, 0)];
       posts = [[iso(W + pd, 0, 0), iso(W + pd, E - pe, 0)], [iso(W + pd, 0, L), iso(W + pd, E - pe, L)]];
-    } else if (state.porchSide === "left") {
+    } else if (p.side === "left") {
       pr = [iso(0, E, 0), iso(0, E - pe, -pd), iso(W, E - pe, -pd), iso(W, E, 0)];
       posts = [[iso(0, 0, -pd), iso(0, E - pe, -pd)], [iso(W, 0, -pd), iso(W, E - pe, -pd)]];
-    } else if (state.porchSide === "right") {
+    } else if (p.side === "right") {
       pr = [iso(0, E, L), iso(0, E - pe, L + pd), iso(W, E - pe, L + pd), iso(W, E, L)];
       posts = [[iso(0, 0, L + pd), iso(0, E - pe, L + pd)], [iso(W, 0, L + pd), iso(W, E - pe, L + pd)]];
     }
-    content += `<polygon points="${pr.map((p) => p.join(",")).join(" ")}" fill="${roofHex}" stroke="${darken(roofHex, 0.25)}" stroke-width="0.8"/>`;
+    content += `<polygon points="${pr.map((pt) => pt.join(",")).join(" ")}" fill="${roofHex}" stroke="${darken(roofHex, 0.25)}" stroke-width="0.8"/>`;
     posts.forEach(([a, b]) => {
       content += `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${trimHex}" stroke-width="2"/>`;
     });
-  }
+  });
 
-  // Walls
   const blb = iso(0, 0, L), brb = iso(W, 0, L), brt = iso(W, E, L), blt = iso(0, E, L);
   const backPeak = state.roofStyle === "lean-to" ? iso(0, E + (W * pitch) / 12, L) : iso(W / 2, E + ridgeRise, L);
   const frontPeak = state.roofStyle === "lean-to" ? iso(0, E + (W * pitch) / 12, 0) : iso(W / 2, E + ridgeRise, 0);
@@ -716,26 +872,21 @@ function renderIso({
   content += `<polygon points="${[frb, brb, brt, iso(W, E, 0)].map((p) => p.join(",")).join(" ")}" fill="${darken(wallHex, 0.1)}" stroke="${darken(wallHex, 0.28)}" stroke-width="0.8"/>`;
 
   const flb = iso(0, 0, 0);
-  const frb3 = iso(W, 0, 0);
   const frt2 = iso(W, E, 0);
   const flt = iso(0, E, 0);
-  const frontGable = [flb, frb3, frt2, frontPeak, flt];
+  const frontGable = [flb, frb, frt2, frontPeak, flt];
   content += `<polygon points="${frontGable.map((p) => p.join(",")).join(" ")}" fill="${wallHex}" stroke="${darken(wallHex, 0.28)}" stroke-width="0.8"/>`;
 
   content += `<polygon points="${[flb, iso(0, 0, L), iso(0, E, L), flt].map((p) => p.join(",")).join(" ")}" fill="${lighten(wallHex, 0.08)}" stroke="${darken(wallHex, 0.25)}" stroke-width="0.8"/>`;
 
-  // Roof
   if (state.roofStyle === "lean-to") {
     const roofSlope = [frt2, brt, iso(0, E + (W * pitch) / 12, L), iso(0, E + (W * pitch) / 12, 0)];
     content += `<polygon points="${roofSlope.map((p) => p.join(",")).join(" ")}" fill="${roofHex}" stroke="${darken(roofHex, 0.22)}" stroke-width="0.8"/>`;
   } else {
-    const roofRight = [frt2, brt, backPeak, frontPeak];
-    content += `<polygon points="${roofRight.map((p) => p.join(",")).join(" ")}" fill="${roofHex}" stroke="${darken(roofHex, 0.22)}" stroke-width="0.8"/>`;
-    const roofLeft = [iso(0, E, 0), frontPeak, backPeak, iso(0, E, L)];
-    content += `<polygon points="${roofLeft.map((p) => p.join(",")).join(" ")}" fill="${darken(roofHex, 0.18)}" stroke="${darken(roofHex, 0.28)}" stroke-width="0.8"/>`;
+    content += `<polygon points="${[frt2, brt, backPeak, frontPeak].map((p) => p.join(",")).join(" ")}" fill="${roofHex}" stroke="${darken(roofHex, 0.22)}" stroke-width="0.8"/>`;
+    content += `<polygon points="${[iso(0, E, 0), frontPeak, backPeak, iso(0, E, L)].map((p) => p.join(",")).join(" ")}" fill="${darken(roofHex, 0.18)}" stroke="${darken(roofHex, 0.28)}" stroke-width="0.8"/>`;
   }
 
-  // Openings (skip back-facing in iso)
   clampedOpenings.forEach((op) => {
     if (op.side === "back") return;
     const w = op.width;
@@ -770,223 +921,6 @@ function renderIso({
         }
       }
     }
-  });
-
-  return content;
-}
-
-interface FrontRenderArgs extends IsoRenderArgs {}
-
-function renderFront({
-  W,
-  L,
-  E,
-  pitch,
-  ridgeRise,
-  state,
-  clampedOpenings,
-  roofHex,
-  wallHex,
-  trimHex,
-  vbW,
-  vbH,
-}: FrontRenderArgs): string {
-  const peakH = state.roofStyle === "lean-to" ? E + (W * pitch) / 12 : E + ridgeRise;
-  const totalH = peakH + 2;
-  let totalW = W;
-  let porchOffsetLeft = 0;
-  if (state.porchSide === "front") { totalW = W + state.porchDepth; porchOffsetLeft = state.porchDepth; }
-  else if (state.porchSide === "back") { totalW = W + state.porchDepth; }
-
-  const padding = 50;
-  const scale = Math.min((vbW - padding * 2) / totalW, (vbH - padding * 2) / totalH);
-  const baseY = (vbH + totalH * scale) / 2;
-  const x0 = (vbW - totalW * scale) / 2 + porchOffsetLeft * scale;
-  const eaveY = baseY - E * scale;
-  const peakY = baseY - peakH * scale;
-
-  let content = "";
-
-  if (state.porchSide === "front" || state.porchSide === "back") {
-    const pd = state.porchDepth;
-    const porchPeakH = E + (pd * state.porchPitch) / 12;
-    const porchEaveH = E - 2;
-    if (state.porchSide === "front") {
-      const px = x0 - pd * scale;
-      content += `<polygon points="${px},${baseY} ${x0},${baseY} ${x0},${baseY - porchPeakH * scale} ${px},${baseY - porchEaveH * scale}" fill="${roofHex}" stroke="${darken(roofHex, 0.22)}" stroke-width="0.8" opacity="0.85"/>`;
-      content += `<line x1="${px}" y1="${baseY}" x2="${px}" y2="${baseY - porchEaveH * scale}" stroke="${trimHex}" stroke-width="1.5"/>`;
-    } else {
-      const px2 = x0 + W * scale + pd * scale;
-      content += `<polygon points="${px2},${baseY} ${x0 + W * scale},${baseY} ${x0 + W * scale},${baseY - porchPeakH * scale} ${px2},${baseY - porchEaveH * scale}" fill="${roofHex}" stroke="${darken(roofHex, 0.22)}" stroke-width="0.8" opacity="0.85"/>`;
-      content += `<line x1="${px2}" y1="${baseY}" x2="${px2}" y2="${baseY - porchEaveH * scale}" stroke="${trimHex}" stroke-width="1.5"/>`;
-    }
-  }
-
-  if (state.roofStyle === "lean-to") {
-    content += `<polygon points="${x0},${baseY} ${x0},${peakY} ${x0 + W * scale},${eaveY} ${x0 + W * scale},${baseY}" fill="${wallHex}" stroke="${darken(wallHex, 0.22)}" stroke-width="0.8"/>`;
-    content += `<polygon points="${x0 - 8},${peakY} ${x0 + W * scale + 8},${eaveY - 4} ${x0 + W * scale + 8},${eaveY} ${x0 - 8},${peakY + 8}" fill="${roofHex}" stroke="${darken(roofHex, 0.22)}" stroke-width="0.8"/>`;
-  } else {
-    const peakX = x0 + (W * scale) / 2;
-    content += `<polygon points="${x0},${baseY} ${x0},${eaveY} ${peakX},${peakY} ${x0 + W * scale},${eaveY} ${x0 + W * scale},${baseY}" fill="${wallHex}" stroke="${darken(wallHex, 0.22)}" stroke-width="0.8"/>`;
-    const rO = 6;
-    content += `<polygon points="${x0 - rO},${eaveY + 3} ${peakX},${peakY - 3} ${x0 + W * scale + rO},${eaveY + 3} ${x0 + W * scale + rO - 1},${eaveY + 6} ${peakX},${peakY} ${x0 - rO + 1},${eaveY + 6}" fill="${roofHex}" stroke="${darken(roofHex, 0.22)}" stroke-width="0.8"/>`;
-  }
-
-  clampedOpenings.forEach((op) => {
-    if (op.side !== "front") return;
-    const dx = x0 + op.position * scale;
-    const dw = op.width * scale;
-    const dh = op.height * scale;
-    if (op.type === "window") {
-      const winY = baseY - (E * 0.45 + op.height) * scale;
-      content += `<rect x="${dx}" y="${winY}" width="${dw}" height="${dh}" fill="#8FB8D4" stroke="${trimHex}" stroke-width="0.8"/>`;
-    } else {
-      content += `<rect x="${dx}" y="${baseY - dh}" width="${dw}" height="${dh}" fill="${trimHex}" stroke="${darken(trimHex, 0.3)}" stroke-width="0.8"/>`;
-      if (op.type === "garage") {
-        for (let h = 1; h < 6; h++) {
-          const hy = baseY - (dh * h) / 6;
-          content += `<line x1="${dx}" y1="${hy}" x2="${dx + dw}" y2="${hy}" stroke="${darken(trimHex, 0.25)}" stroke-width="0.5"/>`;
-        }
-      }
-    }
-  });
-
-  content += `<line x1="${x0 - 30}" y1="${baseY}" x2="${x0 + W * scale + 30}" y2="${baseY}" stroke="rgba(128,128,128,0.5)" stroke-width="0.5" stroke-dasharray="2,2"/>`;
-
-  return content;
-}
-
-function renderSide({
-  L,
-  E,
-  state,
-  clampedOpenings,
-  roofHex,
-  wallHex,
-  trimHex,
-  vbW,
-  vbH,
-}: Omit<IsoRenderArgs, "W" | "pitch" | "ridgeRise"> & { W?: number }): string {
-  let totalL = L;
-  let porchOffsetLeft = 0;
-  if (state.porchSide === "left") { totalL = L + state.porchDepth; porchOffsetLeft = state.porchDepth; }
-  else if (state.porchSide === "right") { totalL = L + state.porchDepth; }
-
-  const totalH = E + 4;
-  const padding = 50;
-  const scale = Math.min((vbW - padding * 2) / totalL, (vbH - padding * 2) / totalH);
-  const baseY = (vbH + totalH * scale) / 2;
-  const x0 = (vbW - totalL * scale) / 2 + porchOffsetLeft * scale;
-  const eaveY = baseY - E * scale;
-
-  let content = "";
-
-  if (state.porchSide === "left" || state.porchSide === "right") {
-    const pd = state.porchDepth;
-    const pe = 2;
-    if (state.porchSide === "left") {
-      const px = x0 - pd * scale;
-      content += `<rect x="${px}" y="${baseY - (E - pe) * scale - 3}" width="${pd * scale}" height="3" fill="${roofHex}" stroke="${darken(roofHex, 0.22)}" stroke-width="0.8"/>`;
-      content += `<line x1="${px}" y1="${baseY}" x2="${px}" y2="${baseY - (E - pe) * scale}" stroke="${trimHex}" stroke-width="1.5"/>`;
-    } else {
-      const px2 = x0 + L * scale;
-      content += `<rect x="${px2}" y="${baseY - (E - pe) * scale - 3}" width="${pd * scale}" height="3" fill="${roofHex}" stroke="${darken(roofHex, 0.22)}" stroke-width="0.8"/>`;
-      content += `<line x1="${px2 + pd * scale}" y1="${baseY}" x2="${px2 + pd * scale}" y2="${baseY - (E - pe) * scale}" stroke="${trimHex}" stroke-width="1.5"/>`;
-    }
-  }
-
-  content += `<rect x="${x0}" y="${eaveY}" width="${L * scale}" height="${E * scale}" fill="${wallHex}" stroke="${darken(wallHex, 0.22)}" stroke-width="0.8"/>`;
-
-  const roofThick = 4;
-  if (state.roofStyle === "lean-to") {
-    content += `<rect x="${x0 - 6}" y="${eaveY - roofThick}" width="${L * scale + 12}" height="${roofThick}" fill="${roofHex}" stroke="${darken(roofHex, 0.22)}" stroke-width="0.8"/>`;
-  } else {
-    content += `<rect x="${x0 - 6}" y="${eaveY - roofThick}" width="${L * scale + 12}" height="${roofThick}" fill="${darken(roofHex, 0.1)}" stroke="${darken(roofHex, 0.25)}" stroke-width="0.8"/>`;
-    content += `<line x1="${x0 - 6}" y1="${eaveY - roofThick / 2}" x2="${x0 + L * scale + 6}" y2="${eaveY - roofThick / 2}" stroke="${darken(roofHex, 0.3)}" stroke-width="0.3" stroke-dasharray="3,2"/>`;
-  }
-
-  clampedOpenings.forEach((op) => {
-    if (op.side !== "right") return;
-    const dx = x0 + op.position * scale;
-    const dw = op.width * scale;
-    const dh = op.height * scale;
-    if (op.type === "window") {
-      const winY = baseY - (E * 0.45 + op.height) * scale;
-      content += `<rect x="${dx}" y="${winY}" width="${dw}" height="${dh}" fill="#8FB8D4" stroke="${trimHex}" stroke-width="0.8"/>`;
-    } else {
-      content += `<rect x="${dx}" y="${baseY - dh}" width="${dw}" height="${dh}" fill="${trimHex}" stroke="${darken(trimHex, 0.3)}" stroke-width="0.8"/>`;
-      if (op.type === "garage") {
-        for (let h = 1; h < 6; h++) {
-          const hy = baseY - (dh * h) / 6;
-          content += `<line x1="${dx}" y1="${hy}" x2="${dx + dw}" y2="${hy}" stroke="${darken(trimHex, 0.25)}" stroke-width="0.5"/>`;
-        }
-      }
-    }
-  });
-
-  content += `<line x1="${x0 - 30}" y1="${baseY}" x2="${x0 + L * scale + 30}" y2="${baseY}" stroke="rgba(128,128,128,0.5)" stroke-width="0.5" stroke-dasharray="2,2"/>`;
-
-  return content;
-}
-
-function renderPlan({
-  W,
-  L,
-  state,
-  clampedOpenings,
-  roofHex,
-  wallHex,
-  trimHex,
-  vbW,
-  vbH,
-}: Omit<IsoRenderArgs, "E" | "pitch" | "ridgeRise"> & { E?: number }): string {
-  let totalW = W;
-  let totalL = L;
-  let offW = 0;
-  let offL = 0;
-  if (state.porchSide === "front") { totalW += state.porchDepth; offW = state.porchDepth; }
-  else if (state.porchSide === "back") { totalW += state.porchDepth; }
-  else if (state.porchSide === "left") { totalL += state.porchDepth; offL = state.porchDepth; }
-  else if (state.porchSide === "right") { totalL += state.porchDepth; }
-
-  const padding = 60;
-  const scale = Math.min((vbW - padding * 2) / totalL, (vbH - padding * 2) / totalW);
-  const px0 = (vbW - totalL * scale) / 2 + offL * scale;
-  const py0 = (vbH - totalW * scale) / 2 + offW * scale;
-
-  let content = "";
-
-  if (state.porchSide !== "none") {
-    const pd = state.porchDepth;
-    let prx = 0, pry = 0, prw = 0, prh = 0;
-    if (state.porchSide === "front") { prx = px0; pry = py0 - pd * scale; prw = L * scale; prh = pd * scale; }
-    else if (state.porchSide === "back") { prx = px0; pry = py0 + W * scale; prw = L * scale; prh = pd * scale; }
-    else if (state.porchSide === "left") { prx = px0 - pd * scale; pry = py0; prw = pd * scale; prh = W * scale; }
-    else if (state.porchSide === "right") { prx = px0 + L * scale; pry = py0; prw = pd * scale; prh = W * scale; }
-    content += `<rect x="${prx}" y="${pry}" width="${prw}" height="${prh}" fill="${lighten(roofHex, 0.5)}" stroke="${darken(roofHex, 0.2)}" stroke-width="0.8" stroke-dasharray="4,3" opacity="0.6"/>`;
-    content += `<text x="${prx + prw / 2}" y="${pry + prh / 2}" font-size="10" fill="rgba(128,128,128,0.8)" text-anchor="middle" dominant-baseline="middle" font-family="inherit">porch</text>`;
-  }
-
-  content += `<rect x="${px0}" y="${py0}" width="${L * scale}" height="${W * scale}" fill="${lighten(wallHex, 0.15)}" stroke="${darken(wallHex, 0.3)}" stroke-width="1"/>`;
-
-  if (state.roofStyle === "gable") {
-    content += `<line x1="${px0}" y1="${py0 + (W * scale) / 2}" x2="${px0 + L * scale}" y2="${py0 + (W * scale) / 2}" stroke="${darken(wallHex, 0.3)}" stroke-width="0.5" stroke-dasharray="4,3"/>`;
-  }
-
-  content += `<text x="${px0 + (L * scale) / 2}" y="${py0 - 8}" font-size="10" fill="rgba(128,128,128,0.7)" text-anchor="middle" font-family="inherit">FRONT (${L}&apos;)</text>`;
-  content += `<text x="${px0 + (L * scale) / 2}" y="${py0 + W * scale + 18}" font-size="10" fill="rgba(128,128,128,0.7)" text-anchor="middle" font-family="inherit">BACK</text>`;
-  content += `<text x="${px0 - 10}" y="${py0 + (W * scale) / 2}" font-size="10" fill="rgba(128,128,128,0.7)" text-anchor="end" dominant-baseline="middle" font-family="inherit">LEFT (${W}&apos;)</text>`;
-  content += `<text x="${px0 + L * scale + 10}" y="${py0 + (W * scale) / 2}" font-size="10" fill="rgba(128,128,128,0.7)" text-anchor="start" dominant-baseline="middle" font-family="inherit">RIGHT</text>`;
-
-  clampedOpenings.forEach((op) => {
-    const thickness = Math.max(3, scale * 0.8);
-    const fill = op.type === "window" ? "#8FB8D4" : trimHex;
-    let ox = 0, oy = 0, ow = 0, oh = 0;
-    if (op.side === "front") { ox = px0 + op.position * scale; oy = py0 - thickness / 2; ow = op.width * scale; oh = thickness; }
-    else if (op.side === "back") { ox = px0 + op.position * scale; oy = py0 + W * scale - thickness / 2; ow = op.width * scale; oh = thickness; }
-    else if (op.side === "left") { ox = px0 - thickness / 2; oy = py0 + op.position * scale; ow = thickness; oh = op.width * scale; }
-    else if (op.side === "right") { ox = px0 + L * scale - thickness / 2; oy = py0 + op.position * scale; ow = thickness; oh = op.width * scale; }
-    content += `<rect x="${ox}" y="${oy}" width="${ow}" height="${oh}" fill="${fill}" stroke="${darken(op.type === "window" ? "#5C8BA8" : trimHex, 0.3)}" stroke-width="0.5"/>`;
   });
 
   return content;
