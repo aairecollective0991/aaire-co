@@ -19,14 +19,26 @@ export default function ContactPage() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
-    // Submit to Vercel Forms
-    await fetch("/", {
+    const data = {
+      name: formData.get('name'),
+      email: formData.get('email'),
+      phone: formData.get('phone'),
+      subject: formData.get('subject'),
+      message: formData.get('message'),
+    };
+
+    // Send email via API
+    const response = await fetch("/api/contact", {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams(formData as any).toString(),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
     });
 
-    setSubmitted(true);
+    if (response.ok) {
+      setSubmitted(true);
+    } else {
+      alert('Failed to send message. Please try again.');
+    }
   };
 
   return (
@@ -87,10 +99,8 @@ export default function ContactPage() {
             >
               <form
                 onSubmit={handleSubmit}
-                data-vercel-form="contact"
                 className="space-y-6"
               >
-                <input type="hidden" name="form-name" value="contact" />
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
