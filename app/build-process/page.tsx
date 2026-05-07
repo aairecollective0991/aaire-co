@@ -262,7 +262,7 @@ export default function BuildProcessPage() {
               </p>
             </motion.div>
 
-            {/* Future Video Placeholder */}
+            {/* Site Prep Video */}
             <motion.div
               variants={fadeUp}
               initial="hidden"
@@ -271,28 +271,20 @@ export default function BuildProcessPage() {
               custom={0.1}
               className="mb-16 lg:mb-20"
             >
-              <div className="relative aspect-video w-full max-w-4xl mx-auto bg-[#f7f5f0] border-2 border-dashed border-[#0d1b2a]/20 rounded-sm flex items-center justify-center overflow-hidden">
-                <div className="text-center px-6">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#C9A96E]/20 mb-4">
-                    <svg
-                      className="w-8 h-8 text-[#C9A96E]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </div>
-                  <p className="text-[#0d1b2a]/60 text-sm font-medium font-[family-name:var(--font-inter)]">
-                    Site Preparation Video — Coming Soon
-                  </p>
-                </div>
+              <div className="relative aspect-video w-full max-w-4xl mx-auto bg-[#0d1b2a] rounded-sm overflow-hidden shadow-2xl">
+                <video
+                  controls
+                  poster="/videos/site_prep_poster.jpg"
+                  className="w-full h-full object-contain"
+                  preload="metadata"
+                >
+                  <source src="/videos/site_prep_web.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
               </div>
+              <p className="mt-4 text-center text-[#0d1b2a]/60 text-sm font-[family-name:var(--font-inter)]">
+                30-second site preparation sequence — see how the foundation takes shape
+              </p>
             </motion.div>
 
             {/* Site Prep Steps */}
