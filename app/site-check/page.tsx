@@ -295,21 +295,54 @@ export default function SiteCheckPage() {
   const [buildingType, setBuildingType] = useState<BuildingType | "">("");
   const [hawaiiCounty, setHawaiiCounty] = useState<HawaiiCounty | "">("");
   const [hawaiiBuildingType, setHawaiiBuildingType] = useState<BuildingType | "">("");
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [result, setResult] = useState<
     | { county: County; buildingType: BuildingType; info: CountyInfo; isHawaii: false }
     | { county: HawaiiCounty; buildingType: BuildingType; info: HawaiiCountyInfo; isHawaii: true }
     | null
   >(null);
 
-  const handleNCSubmit = (e: React.FormEvent) => {
+  const handleNCSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!county || !buildingType) return;
+    if (!county || !buildingType || !email) return;
+
+    // Submit lead to Vercel Forms
+    await fetch("/", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        "form-name": "site-check-nc",
+        email,
+        name,
+        phone,
+        county,
+        buildingType,
+      }).toString(),
+    });
+
     setResult({ county, buildingType, info: countyData[county], isHawaii: false });
   };
 
-  const handleHawaiiSubmit = (e: React.FormEvent) => {
+  const handleHawaiiSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!hawaiiCounty || !hawaiiBuildingType) return;
+    if (!hawaiiCounty || !hawaiiBuildingType || !email) return;
+
+    // Submit lead to Vercel Forms
+    await fetch("/", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        "form-name": "site-check-hawaii",
+        email,
+        name,
+        phone,
+        county: hawaiiCounty,
+        buildingType: hawaiiBuildingType,
+      }).toString(),
+    });
+
     setResult({ county: hawaiiCounty, buildingType: hawaiiBuildingType, info: hawaiiCountyData[hawaiiCounty], isHawaii: true });
   };
 
@@ -425,7 +458,71 @@ export default function SiteCheckPage() {
                   onSubmit={handleNCSubmit}
                   className="bg-white border border-[#0d1b2a]/10 rounded-sm shadow-sm p-6 sm:p-8 lg:p-10"
                   aria-label="NC Build Site Checker"
+                  data-vercel-form="site-check-nc"
                 >
+                  {/* Hidden input for Vercel Forms */}
+                  <input type="hidden" name="form-name" value="site-check-nc" />
+
+                  <div className="mb-6 pb-6 border-b border-[#0d1b2a]/10">
+                    <h3 className="text-sm font-semibold text-[#0d1b2a] mb-4 font-[family-name:var(--font-inter)]">
+                      Get Your Free Site Assessment
+                    </h3>
+                    <div className="grid md:grid-cols-2 gap-5 md:gap-6">
+                      <div>
+                        <label
+                          htmlFor="nc-email"
+                          className="block text-xs font-semibold tracking-widest uppercase text-[#0d1b2a]/70 mb-2 font-[family-name:var(--font-inter)]"
+                        >
+                          Email *
+                        </label>
+                        <input
+                          type="email"
+                          id="nc-email"
+                          name="email"
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="your@email.com"
+                          className="w-full h-12 px-4 rounded-sm border border-[#0d1b2a]/15 bg-white text-[#0d1b2a] font-medium font-[family-name:var(--font-inter)] focus:outline-none focus:border-[#C9A96E] focus:ring-2 focus:ring-[#C9A96E]/20 transition-colors placeholder:text-[#0d1b2a]/40"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="nc-name"
+                          className="block text-xs font-semibold tracking-widest uppercase text-[#0d1b2a]/70 mb-2 font-[family-name:var(--font-inter)]"
+                        >
+                          Name
+                        </label>
+                        <input
+                          type="text"
+                          id="nc-name"
+                          name="name"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="Your name"
+                          className="w-full h-12 px-4 rounded-sm border border-[#0d1b2a]/15 bg-white text-[#0d1b2a] font-medium font-[family-name:var(--font-inter)] focus:outline-none focus:border-[#C9A96E] focus:ring-2 focus:ring-[#C9A96E]/20 transition-colors placeholder:text-[#0d1b2a]/40"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label
+                          htmlFor="nc-phone"
+                          className="block text-xs font-semibold tracking-widest uppercase text-[#0d1b2a]/70 mb-2 font-[family-name:var(--font-inter)]"
+                        >
+                          Phone (Optional)
+                        </label>
+                        <input
+                          type="tel"
+                          id="nc-phone"
+                          name="phone"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="(123) 456-7890"
+                          className="w-full h-12 px-4 rounded-sm border border-[#0d1b2a]/15 bg-white text-[#0d1b2a] font-medium font-[family-name:var(--font-inter)] focus:outline-none focus:border-[#C9A96E] focus:ring-2 focus:ring-[#C9A96E]/20 transition-colors placeholder:text-[#0d1b2a]/40"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="grid md:grid-cols-2 gap-5 md:gap-6">
                     <div>
                       <label
@@ -436,6 +533,7 @@ export default function SiteCheckPage() {
                       </label>
                       <select
                         id="nc-county"
+                        name="county"
                         required
                         value={county}
                         onChange={(e) => setCounty(e.target.value as County)}
@@ -461,6 +559,7 @@ export default function SiteCheckPage() {
                       </label>
                       <select
                         id="nc-buildingType"
+                        name="buildingType"
                         required
                         value={buildingType}
                         onChange={(e) =>
@@ -483,7 +582,7 @@ export default function SiteCheckPage() {
                   <div className="mt-6 flex justify-end">
                     <button
                       type="submit"
-                      disabled={!county || !buildingType}
+                      disabled={!county || !buildingType || !email}
                       className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#C9A96E] hover:bg-[#b8954f] disabled:bg-[#C9A96E]/40 disabled:cursor-not-allowed text-[#0d1b2a] text-base font-bold rounded-sm transition-all duration-200 shadow-md shadow-[#C9A96E]/20 hover:shadow-lg hover:shadow-[#C9A96E]/30 hover:-translate-y-0.5 disabled:shadow-none disabled:hover:translate-y-0"
                     >
                       Check My Site
@@ -542,7 +641,71 @@ export default function SiteCheckPage() {
                     onSubmit={handleHawaiiSubmit}
                     className="bg-white border border-[#0d1b2a]/10 rounded-sm shadow-sm p-6 sm:p-8 lg:p-10"
                     aria-label="Hawaii Build Site Checker"
+                    data-vercel-form="site-check-hawaii"
                   >
+                    {/* Hidden input for Vercel Forms */}
+                    <input type="hidden" name="form-name" value="site-check-hawaii" />
+
+                    <div className="mb-6 pb-6 border-b border-[#0d1b2a]/10">
+                      <h3 className="text-sm font-semibold text-[#0d1b2a] mb-4 font-[family-name:var(--font-inter)]">
+                        Get Your Free Site Assessment
+                      </h3>
+                      <div className="grid md:grid-cols-2 gap-5 md:gap-6">
+                        <div>
+                          <label
+                            htmlFor="hawaii-email"
+                            className="block text-xs font-semibold tracking-widest uppercase text-[#0d1b2a]/70 mb-2 font-[family-name:var(--font-inter)]"
+                          >
+                            Email *
+                          </label>
+                          <input
+                            type="email"
+                            id="hawaii-email"
+                            name="email"
+                            required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="your@email.com"
+                            className="w-full h-12 px-4 rounded-sm border border-[#0d1b2a]/15 bg-white text-[#0d1b2a] font-medium font-[family-name:var(--font-inter)] focus:outline-none focus:border-[#C9A96E] focus:ring-2 focus:ring-[#C9A96E]/20 transition-colors placeholder:text-[#0d1b2a]/40"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="hawaii-name"
+                            className="block text-xs font-semibold tracking-widest uppercase text-[#0d1b2a]/70 mb-2 font-[family-name:var(--font-inter)]"
+                          >
+                            Name
+                          </label>
+                          <input
+                            type="text"
+                            id="hawaii-name"
+                            name="name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Your name"
+                            className="w-full h-12 px-4 rounded-sm border border-[#0d1b2a]/15 bg-white text-[#0d1b2a] font-medium font-[family-name:var(--font-inter)] focus:outline-none focus:border-[#C9A96E] focus:ring-2 focus:ring-[#C9A96E]/20 transition-colors placeholder:text-[#0d1b2a]/40"
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label
+                            htmlFor="hawaii-phone"
+                            className="block text-xs font-semibold tracking-widest uppercase text-[#0d1b2a]/70 mb-2 font-[family-name:var(--font-inter)]"
+                          >
+                            Phone (Optional)
+                          </label>
+                          <input
+                            type="tel"
+                            id="hawaii-phone"
+                            name="phone"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            placeholder="(123) 456-7890"
+                            className="w-full h-12 px-4 rounded-sm border border-[#0d1b2a]/15 bg-white text-[#0d1b2a] font-medium font-[family-name:var(--font-inter)] focus:outline-none focus:border-[#C9A96E] focus:ring-2 focus:ring-[#C9A96E]/20 transition-colors placeholder:text-[#0d1b2a]/40"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="grid md:grid-cols-2 gap-5 md:gap-6">
                       <div>
                         <label
@@ -553,6 +716,7 @@ export default function SiteCheckPage() {
                         </label>
                         <select
                           id="hawaii-county"
+                          name="county"
                           required
                           value={hawaiiCounty}
                           onChange={(e) => setHawaiiCounty(e.target.value as HawaiiCounty)}
@@ -577,6 +741,7 @@ export default function SiteCheckPage() {
                         </label>
                         <select
                           id="hawaii-buildingType"
+                          name="buildingType"
                           required
                           value={hawaiiBuildingType}
                           onChange={(e) =>
@@ -599,7 +764,7 @@ export default function SiteCheckPage() {
                     <div className="mt-6 flex justify-end">
                       <button
                         type="submit"
-                        disabled={!hawaiiCounty || !hawaiiBuildingType}
+                        disabled={!hawaiiCounty || !hawaiiBuildingType || !email}
                         className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#C9A96E] hover:bg-[#b8954f] disabled:bg-[#C9A96E]/40 disabled:cursor-not-allowed text-[#0d1b2a] text-base font-bold rounded-sm transition-all duration-200 shadow-md shadow-[#C9A96E]/20 hover:shadow-lg hover:shadow-[#C9A96E]/30 hover:-translate-y-0.5 disabled:shadow-none disabled:hover:translate-y-0"
                       >
                         Check My Site
