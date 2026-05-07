@@ -120,11 +120,11 @@ export default function Hero() {
                 Get Your Free Quote
               </a>
               <a
-                href="#gallery"
-                id="hero-gallery-button"
+                href="/build-process"
+                id="hero-build-process-button"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-white/30 hover:border-[#C9A96E] text-white hover:text-[#C9A96E] text-base font-semibold rounded-sm transition-all duration-200 backdrop-blur-sm"
               >
-                View Gallery
+                How It's Built
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
