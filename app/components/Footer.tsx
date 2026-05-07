@@ -5,7 +5,7 @@ const navLinks = [
   { label: "Gallery", href: "/gallery" },
   { label: "Build Site Check", href: "/site-check" },
   { label: "About", href: "/about" },
-  { label: "Contact Us", href: "mailto:info@aaireco.com" },
+  { label: "Contact Us", href: "mailto:aairecollective@gmail.com" },
 ];
 
 const locationLinks = [
