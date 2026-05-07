@@ -84,7 +84,7 @@ export default function BuildingGrid() {
             Steel structures for every purpose
           </h2>
           <p className="mt-4 text-[#0d1b2a]/60 text-lg max-w-2xl mx-auto">
-            Factory-direct pricing means you get more building for your budget — no middlemen, no markup.
+            Expert guidance meets competitive pricing — local knowledge, hands-on support, and premium steel buildings designed for your needs.
           </p>
         </div>
 
