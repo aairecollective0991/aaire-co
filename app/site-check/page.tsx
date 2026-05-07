@@ -3,8 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
-import Nav from "../components/Nav";
-import Footer from "../components/Footer";
 
 type County =
   | "Mecklenburg"
@@ -320,8 +318,6 @@ export default function SiteCheckPage() {
 
   return (
     <>
-      <Nav />
-      <main>
         {/* 1. HERO */}
         <section className="relative bg-[#0d1b2a] overflow-hidden pt-32 pb-20 lg:pt-40 lg:pb-28">
           <div className="absolute top-0 right-0 w-96 h-96 bg-[#C9A96E]/10 rounded-full blur-3xl" />
@@ -707,8 +703,6 @@ export default function SiteCheckPage() {
             </motion.div>
           </div>
         </section>
-      </main>
-      <Footer />
     </>
   );
 }
