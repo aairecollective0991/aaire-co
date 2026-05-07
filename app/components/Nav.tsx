@@ -16,6 +16,7 @@ export default function Nav() {
 
   const navLinks = [
     { label: "Buildings", href: "/construction" },
+    { label: "Why Web Truss", href: "/why-web-truss" },
     { label: "Gallery", href: "/gallery" },
     { label: "Build Site Check", href: "/site-check" },
     { label: "Configure", href: "/configure" },
