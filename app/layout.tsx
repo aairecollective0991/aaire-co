@@ -17,7 +17,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://aaireco.com'), // Update with your actual domain
+  metadataBase: new URL('https://aaireco.com'),
   title: {
     default: "AAIRE Co. Metal Buildings | Factory-Direct Steel Buildings Nationwide",
     template: "%s | AAIRE Co. Metal Buildings"
