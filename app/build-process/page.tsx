@@ -1,8 +1,6 @@
 "use client";
 
 import { motion, type Variants } from "framer-motion";
-import Nav from "../components/Nav";
-import Footer from "../components/Footer";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 30 },
@@ -144,8 +142,6 @@ const assemblySteps = [
 export default function BuildProcessPage() {
   return (
     <>
-      <Nav />
-      <main>
         {/* HERO */}
         <section className="relative bg-[#0d1b2a] overflow-hidden pt-32 pb-24 lg:pt-40 lg:pb-32">
           <div className="absolute top-0 right-0 w-96 h-96 bg-[#C9A96E]/10 rounded-full blur-3xl" />
@@ -454,8 +450,6 @@ export default function BuildProcessPage() {
             </motion.div>
           </div>
         </section>
-      </main>
-      <Footer />
     </>
   );
 }

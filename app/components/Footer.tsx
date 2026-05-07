@@ -1,9 +1,10 @@
 const navLinks = [
-  { label: "Buildings", href: "#buildings" },
+  { label: "Buildings", href: "/construction" },
   { label: "Why Web Truss", href: "/why-web-truss" },
-  { label: "Gallery", href: "#gallery" },
-  { label: "Build Site Check", href: "#quote" },
-  { label: "About", href: "#about" },
+  { label: "Build Process", href: "/build-process" },
+  { label: "Gallery", href: "/gallery" },
+  { label: "Build Site Check", href: "/site-check" },
+  { label: "About", href: "/about" },
 ];
 
 const locationLinks = [
