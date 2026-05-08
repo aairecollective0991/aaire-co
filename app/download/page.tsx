@@ -16,9 +16,16 @@ const fadeUp = {
 export default function DownloadPage() {
   const [submitted, setSubmitted] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [agreedToMarketing, setAgreedToMarketing] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!agreedToMarketing) {
+      alert('Please agree to receive marketing emails to download the guide.');
+      return;
+    }
+
     const formData = new FormData(e.currentTarget);
 
     const data = {
@@ -104,6 +111,22 @@ export default function DownloadPage() {
                         placeholder="your@email.com"
                         className="w-full h-12 px-4 rounded-sm border border-white/20 bg-white/10 text-white font-medium font-[family-name:var(--font-inter)] focus:outline-none focus:border-[#C9A96E] focus:ring-2 focus:ring-[#C9A96E]/20 transition-colors placeholder:text-white/40"
                       />
+                    </div>
+
+                    <div className="flex items-start gap-3 pt-2">
+                      <input
+                        type="checkbox"
+                        id="marketing-consent"
+                        checked={agreedToMarketing}
+                        onChange={(e) => setAgreedToMarketing(e.target.checked)}
+                        className="w-5 h-5 mt-0.5 rounded border-white/20 bg-white/10 text-[#C9A96E] focus:ring-2 focus:ring-[#C9A96E]/20 focus:ring-offset-0 cursor-pointer"
+                      />
+                      <label
+                        htmlFor="marketing-consent"
+                        className="text-white/70 text-sm leading-relaxed cursor-pointer font-[family-name:var(--font-inter)]"
+                      >
+                        I agree to receive marketing emails from AAIRE Co. in exchange for this free guide. You can unsubscribe anytime.
+                      </label>
                     </div>
 
                     <button
