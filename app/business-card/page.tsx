@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function BusinessCardPage() {
   return (
@@ -58,16 +59,16 @@ export default function BusinessCardPage() {
             </div>
           </motion.div>
 
-          {/* Back - Design 1 */}
+          {/* Back - Design 1 (Navy with white logo) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className="space-y-4"
           >
-            <h2 className="text-xl font-semibold text-gray-700">Back</h2>
+            <h2 className="text-xl font-semibold text-gray-700">Back (Navy)</h2>
             <div
-              className="bg-white border-2 border-[#0d1b2a] rounded-lg shadow-2xl overflow-hidden"
+              className="bg-[#0d1b2a] rounded-lg shadow-2xl overflow-hidden"
               style={{
                 aspectRatio: "3.5 / 2",
                 width: "100%",
@@ -75,6 +76,21 @@ export default function BusinessCardPage() {
               }}
             >
               <div className="h-full p-8 flex flex-col justify-between">
+                {/* Logo and tagline */}
+                <div className="flex items-center justify-between">
+                  <div className="relative w-32 h-12">
+                    <Image
+                      src="/images/logos/aaire-logo-white.jpg"
+                      alt="AAIRE Co."
+                      fill
+                      className="object-contain object-left"
+                    />
+                  </div>
+                  <p className="text-white/50 text-xs italic font-medium">
+                    More Than a Supplier
+                  </p>
+                </div>
+
                 {/* Contact Details */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
@@ -82,7 +98,7 @@ export default function BusinessCardPage() {
                       <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                       <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                     </svg>
-                    <p className="text-[#0d1b2a] text-sm font-medium">
+                    <p className="text-white text-sm font-medium">
                       aairecollective@gmail.com
                     </p>
                   </div>
@@ -91,15 +107,12 @@ export default function BusinessCardPage() {
                     <svg className="w-4 h-4 text-[#C9A96E]" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clipRule="evenodd" />
                     </svg>
-                    <p className="text-[#0d1b2a] text-sm font-medium">
+                    <p className="text-white text-sm font-medium">
                       aaireco.com
                     </p>
                   </div>
-                </div>
 
-                {/* Tagline */}
-                <div className="border-t-2 border-[#C9A96E] pt-3">
-                  <p className="text-[#0d1b2a] text-xs leading-relaxed">
+                  <p className="text-white/70 text-xs leading-relaxed pt-2 border-t border-white/10">
                     Expert guidance from design to delivery—serving all 50 states
                   </p>
                 </div>
@@ -124,13 +137,18 @@ export default function BusinessCardPage() {
               }}
             >
               <div className="h-full p-8 flex flex-col justify-between">
-                {/* Logo/Brand */}
-                <div>
-                  <h1 className="text-3xl font-bold text-[#0d1b2a] mb-1">
-                    AAIRE Co.
-                  </h1>
-                  <p className="text-[#0d1b2a]/80 text-sm font-semibold tracking-wide">
-                    METAL BUILDINGS
+                {/* Logo */}
+                <div className="flex items-center justify-between">
+                  <div className="relative w-32 h-12">
+                    <Image
+                      src="/images/logos/aaire-logo-black.png"
+                      alt="AAIRE Co."
+                      fill
+                      className="object-contain object-left"
+                    />
+                  </div>
+                  <p className="text-[#0d1b2a]/60 text-xs italic font-medium">
+                    More Than a Supplier
                   </p>
                 </div>
 
