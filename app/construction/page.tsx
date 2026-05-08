@@ -2,8 +2,6 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import Nav from "../components/Nav";
-import Footer from "../components/Footer";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -160,8 +158,6 @@ const comparisonData = [
 export default function ConstructionPage() {
   return (
     <>
-      <Nav />
-      <main>
         {/* Hero Section */}
         <section className="relative bg-[#0d1b2a] text-white pt-32 pb-20 lg:pt-40 lg:pb-32">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -583,8 +579,6 @@ export default function ConstructionPage() {
             </motion.div>
           </div>
         </section>
-      </main>
-      <Footer />
     </>
   );
 }

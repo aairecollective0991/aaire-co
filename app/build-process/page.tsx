@@ -442,6 +442,42 @@ export default function BuildProcessPage() {
             </motion.div>
           </div>
         </section>
+
+        {/* Download Guide CTA */}
+        <section className="bg-[#f7f5f0] py-16 lg:py-20">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              custom={0}
+              variants={fadeUp}
+            >
+              <div className="bg-white border border-[#0d1b2a]/10 rounded-sm shadow-lg p-8 lg:p-10">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[#C9A96E]/20 mb-6">
+                  <svg className="w-7 h-7 text-[#C9A96E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+                <h3 className="font-[family-name:var(--font-playfair)] text-2xl lg:text-3xl font-bold text-[#0d1b2a] mb-4">
+                  Want the Complete Build Process Checklist?
+                </h3>
+                <p className="text-[#0d1b2a]/70 text-lg mb-6 max-w-2xl mx-auto">
+                  Download our free buyer's guide with detailed assembly instructions, foundation specs, and DIY best practices.
+                </p>
+                <a
+                  href="/download"
+                  className="inline-flex items-center gap-2 px-8 py-3 bg-[#C9A96E] hover:bg-[#b8954f] text-[#0d1b2a] text-base font-bold rounded-sm transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                >
+                  Download Free Guide
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                  </svg>
+                </a>
+              </div>
+            </motion.div>
+          </div>
+        </section>
     </>
   );
 }

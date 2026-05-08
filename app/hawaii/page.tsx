@@ -2,8 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import Nav from "../components/Nav";
-import Footer from "../components/Footer";
+import Script from "next/script";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -135,8 +134,61 @@ export default function HawaiiPage() {
 
   return (
     <>
-      <Nav />
-      <main>
+      <Script id="hawaii-structured-data" type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Service",
+          "serviceType": "Metal Building Construction and Delivery",
+          "provider": {
+            "@type": "Organization",
+            "name": "AAIRE Co.",
+            "url": "https://aaireco.com"
+          },
+          "areaServed": [
+            {
+              "@type": "State",
+              "name": "Hawaii"
+            },
+            {
+              "@type": "City",
+              "name": "Honolulu",
+              "containedIn": {
+                "@type": "State",
+                "name": "Hawaii"
+              }
+            },
+            {
+              "@type": "City",
+              "name": "Maui",
+              "containedIn": {
+                "@type": "State",
+                "name": "Hawaii"
+              }
+            },
+            {
+              "@type": "City",
+              "name": "Hilo",
+              "containedIn": {
+                "@type": "State",
+                "name": "Hawaii"
+              }
+            },
+            {
+              "@type": "City",
+              "name": "Kauai",
+              "containedIn": {
+                "@type": "State",
+                "name": "Hawaii"
+              }
+            }
+          ],
+          "offers": {
+            "@type": "Offer",
+            "description": "Factory-direct steel buildings delivered to Hawaii with ocean freight coordination"
+          }
+        })}
+      </Script>
+
         {/* 1. Hero Section */}
         <section className="relative bg-[#0d1b2a] text-white pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-[#C9A96E]/10 rounded-full blur-3xl" />
@@ -495,8 +547,6 @@ export default function HawaiiPage() {
             </motion.div>
           </div>
         </section>
-      </main>
-      <Footer />
     </>
   );
 }

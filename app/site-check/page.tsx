@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Script from "next/script";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 
 type County =
@@ -318,6 +319,34 @@ export default function SiteCheckPage() {
 
   return (
     <>
+      <Script id="site-check-structured-data" type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "AAIRE Co. Build Site Checker",
+          "description": "Free building permit and site evaluation tool for North Carolina and Hawaii. Check county requirements, setbacks, wind loads, and HOA considerations for metal building projects.",
+          "applicationCategory": "UtilityApplication",
+          "operatingSystem": "Web",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "provider": {
+            "@type": "Organization",
+            "name": "AAIRE Co.",
+            "url": "https://aaireco.com"
+          },
+          "featureList": [
+            "Hawaii county building permit requirements",
+            "North Carolina county permit information",
+            "Wind load and building code requirements",
+            "HOA restriction guidance",
+            "Setback requirements by county"
+          ]
+        })}
+      </Script>
+
         {/* 1. HERO */}
         <section className="relative bg-[#0d1b2a] overflow-hidden pt-32 pb-20 lg:pt-40 lg:pb-28">
           <div className="absolute top-0 right-0 w-96 h-96 bg-[#C9A96E]/10 rounded-full blur-3xl" />
@@ -365,8 +394,8 @@ export default function SiteCheckPage() {
             >
               Everything begins with a few key questions: What&apos;s the purpose
               of this building? What restrictions or HOA rules apply in your
-              area? Enter your county and building type below to see what to
-              expect.
+              area? Check building requirements for North Carolina or Hawaii counties.
+              Enter your county and building type below to see what to expect.
             </motion.p>
             <motion.p
               variants={fadeUp}
@@ -623,6 +652,34 @@ export default function SiteCheckPage() {
             <AnimatePresence mode="wait">
               {result && <Results key={result.county + result.buildingType} result={result} />}
             </AnimatePresence>
+
+            {/* Download CTA (shown after results) */}
+            {result && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1, duration: 0.5 }}
+                className="mt-12 max-w-3xl mx-auto"
+              >
+                <div className="bg-gradient-to-r from-[#C9A96E]/10 to-[#C9A96E]/5 border border-[#C9A96E]/30 rounded-sm p-8 text-center">
+                  <h3 className="font-[family-name:var(--font-playfair)] text-2xl font-bold text-[#0d1b2a] mb-3">
+                    Want the Complete Site Prep & Foundation Guide?
+                  </h3>
+                  <p className="text-[#0d1b2a]/70 mb-6 max-w-2xl mx-auto">
+                    Download our free buyer's guide with detailed checklists, foundation specs, and common mistakes to avoid.
+                  </p>
+                  <a
+                    href="/download"
+                    className="inline-flex items-center gap-2 px-8 py-3 bg-[#C9A96E] hover:bg-[#b8954f] text-[#0d1b2a] text-base font-bold rounded-sm transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                  >
+                    Download Free Guide
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                    </svg>
+                  </a>
+                </div>
+              </motion.div>
+            )}
           </div>
         </section>
 

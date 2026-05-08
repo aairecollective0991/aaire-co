@@ -1,0 +1,39 @@
+<svg width="120" height="140" viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Icon with Woodpecker Silhouette (centered) -->
+  <g id="icon" transform="translate(60, 40)">
+    <!-- Outer circle -->
+    <circle cx="0" cy="0" r="32" stroke="#C9A96E" stroke-width="2.5" fill="none"/>
+
+    <!-- Triangle A at top -->
+    <path d="M 0 -24 L -13 4 L 13 4 Z" stroke="#C9A96E" stroke-width="2.5" fill="none"/>
+
+    <!-- Geometric Woodpecker Silhouette (angular/faceted bird) -->
+    <!-- Head pointing right -->
+    <path d="M 2 -10 L 10 -8 L 12 -10 L 10 -13 L 2 -10 Z" fill="#C9A96E" stroke="#C9A96E" stroke-width="0.5"/>
+
+    <!-- Body/chest -->
+    <path d="M 0 -10 L 2 -10 L 2 4 L -2 7 L -5 4 L -2 -7 Z" fill="#C9A96E" stroke="#C9A96E" stroke-width="1.2"/>
+
+    <!-- Wings (angular facets) -->
+    <path d="M 2 -7 L 10 -4 L 8 1 L 2 -1 Z" fill="#C9A96E" opacity="0.8" stroke="#C9A96E" stroke-width="1"/>
+    <path d="M 2 -1 L 8 1 L 6 6 L 2 4 Z" fill="#C9A96E" opacity="0.7" stroke="#C9A96E" stroke-width="1"/>
+
+    <!-- Tail feathers (angular) -->
+    <path d="M -5 4 L -2 7 L -5 12 L -9 9 Z" fill="#C9A96E" opacity="0.8" stroke="#C9A96E" stroke-width="1"/>
+    <path d="M -2 7 L 2 4 L 0 12 L -5 12 Z" fill="#C9A96E" opacity="0.7" stroke="#C9A96E" stroke-width="1"/>
+
+    <!-- Hammer at bottom -->
+    <g transform="translate(-5, 17)">
+      <rect x="4" y="0" width="2" height="12" fill="#C9A96E"/>
+      <rect x="0" y="0" width="10" height="5" rx="1" fill="#C9A96E"/>
+    </g>
+  </g>
+
+  <!-- Text: AAIRE Co. (centered below icon) -->
+  <text x="60" y="110" font-family="Playfair Display, serif" font-size="24" font-weight="700" fill="#0d1b2a" text-anchor="middle" letter-spacing="-0.5">
+    AAIRE
+  </text>
+  <text x="60" y="132" font-family="Playfair Display, serif" font-size="20" font-weight="600" fill="#0d1b2a" text-anchor="middle" letter-spacing="0.5">
+    Co.
+  </text>
+</svg>

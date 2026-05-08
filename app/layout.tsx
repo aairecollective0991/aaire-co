@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   },
   description:
     "Factory-direct steel buildings delivered across all 50 states. Barndominiums, garages, RV covers, agricultural structures. 50-year structural warranty. Certified Worldwide Steel Buildings distributor.",
-  keywords: ["metal buildings", "steel buildings", "barndominiums", "pole barns", "steel garages", "agricultural buildings", "RV covers", "carports", "Worldwide Steel Buildings", "metal building kits"],
+  keywords: ["metal buildings", "steel buildings", "barndominiums", "pole barns", "steel garages", "agricultural buildings", "RV covers", "carports", "Worldwide Steel Buildings", "metal building kits", "steel buildings Hawaii", "metal buildings Hawaii", "Hawaii steel buildings", "build site check", "site evaluation", "Hawaii building permits", "Hawaii wind load", "steel buildings Oahu", "steel buildings Maui", "steel buildings Big Island", "Hawaii construction"],
   authors: [{ name: "AAIRE Co." }],
   openGraph: {
     type: 'website',
