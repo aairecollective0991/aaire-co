@@ -125,7 +125,7 @@ export default function DownloadPage() {
                         htmlFor="marketing-consent"
                         className="text-white/70 text-sm leading-relaxed cursor-pointer font-[family-name:var(--font-inter)]"
                       >
-                        I agree to receive marketing emails from AAIRE Co. in exchange for this free guide. You can unsubscribe anytime.
+                        I agree to Receive marketing emails from AAIRE Co. Metal Buildings. You can unsubscribe anytime.
                       </label>
                     </div>
 
