@@ -2,8 +2,43 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { useRef } from "react";
 
 export default function BusinessCardPage() {
+  const navyFrontRef = useRef<HTMLDivElement>(null);
+  const navyBackRef = useRef<HTMLDivElement>(null);
+  const goldFrontRef = useRef<HTMLDivElement>(null);
+  const goldBackRef = useRef<HTMLDivElement>(null);
+
+  const downloadAsJPG = async (elementRef: React.RefObject<HTMLDivElement>, filename: string) => {
+    if (!elementRef.current) return;
+
+    try {
+      // Dynamically import html2canvas
+      const html2canvas = (await import('html2canvas')).default;
+
+      const canvas = await html2canvas(elementRef.current, {
+        scale: 3, // Higher resolution for print quality
+        backgroundColor: null,
+        logging: false,
+      });
+
+      // Convert to JPG
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename;
+          link.click();
+          URL.revokeObjectURL(url);
+        }
+      }, 'image/jpeg', 0.95);
+    } catch (error) {
+      console.error('Error generating image:', error);
+      alert('Failed to generate image. Please try again.');
+    }
+  };
   return (
     <div className="min-h-screen bg-gray-100 py-20 px-4">
       <div className="max-w-6xl mx-auto">
@@ -23,8 +58,17 @@ export default function BusinessCardPage() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-4"
           >
-            <h2 className="text-xl font-semibold text-gray-700">Front</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-700">Navy Front</h2>
+              <button
+                onClick={() => downloadAsJPG(navyFrontRef, 'aaire-business-card-navy-front.jpg')}
+                className="px-4 py-2 bg-[#0d1b2a] text-white text-sm rounded hover:bg-[#1a2942] transition-colors"
+              >
+                Download JPG
+              </button>
+            </div>
             <div
+              ref={navyFrontRef}
               className="bg-[#0d1b2a] rounded-lg shadow-2xl overflow-hidden"
               style={{
                 aspectRatio: "3.5 / 2",
@@ -66,8 +110,17 @@ export default function BusinessCardPage() {
             transition={{ delay: 0.1 }}
             className="space-y-4"
           >
-            <h2 className="text-xl font-semibold text-gray-700">Back (Navy)</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-700">Navy Back</h2>
+              <button
+                onClick={() => downloadAsJPG(navyBackRef, 'aaire-business-card-navy-back.jpg')}
+                className="px-4 py-2 bg-[#0d1b2a] text-white text-sm rounded hover:bg-[#1a2942] transition-colors"
+              >
+                Download JPG
+              </button>
+            </div>
             <div
+              ref={navyBackRef}
               className="bg-[#0d1b2a] rounded-lg shadow-2xl overflow-hidden"
               style={{
                 aspectRatio: "3.5 / 2",
@@ -119,8 +172,17 @@ export default function BusinessCardPage() {
             transition={{ delay: 0.2 }}
             className="space-y-4"
           >
-            <h2 className="text-xl font-semibold text-gray-700">Alt. Front (Gold)</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-700">Gold Front</h2>
+              <button
+                onClick={() => downloadAsJPG(goldFrontRef, 'aaire-business-card-gold-front.jpg')}
+                className="px-4 py-2 bg-[#C9A96E] text-[#0d1b2a] text-sm rounded hover:bg-[#b8954f] transition-colors"
+              >
+                Download JPG
+              </button>
+            </div>
             <div
+              ref={goldFrontRef}
               className="bg-[#C9A96E] rounded-lg shadow-2xl overflow-hidden"
               style={{
                 aspectRatio: "3.5 / 2",
@@ -164,8 +226,17 @@ export default function BusinessCardPage() {
             transition={{ delay: 0.3 }}
             className="space-y-4"
           >
-            <h2 className="text-xl font-semibold text-gray-700">Alt. Back (Gold)</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-700">Gold Back</h2>
+              <button
+                onClick={() => downloadAsJPG(goldBackRef, 'aaire-business-card-gold-back.jpg')}
+                className="px-4 py-2 bg-[#C9A96E] text-[#0d1b2a] text-sm rounded hover:bg-[#b8954f] transition-colors"
+              >
+                Download JPG
+              </button>
+            </div>
             <div
+              ref={goldBackRef}
               className="bg-[#C9A96E] rounded-lg shadow-2xl overflow-hidden"
               style={{
                 aspectRatio: "3.5 / 2",
