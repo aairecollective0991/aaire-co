@@ -19,19 +19,10 @@ export default function ContactPage() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
-    const data = {
-      name: formData.get('name'),
-      email: formData.get('email'),
-      phone: formData.get('phone'),
-      subject: formData.get('subject'),
-      message: formData.get('message'),
-    };
-
-    // Send email via API
-    const response = await fetch("/api/contact", {
+    // Send via Web3Forms
+    const response = await fetch("https://api.web3forms.com/submit", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: formData,
     });
 
     if (response.ok) {
@@ -101,6 +92,8 @@ export default function ContactPage() {
                 onSubmit={handleSubmit}
                 className="space-y-6"
               >
+                {/* Web3Forms Access Key */}
+                <input type="hidden" name="access_key" value="4e6c0ca2-572e-4868-b3e4-a1a350b91a3d" />
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
