@@ -136,31 +136,43 @@ export default function BusinessCardPage() {
                 maxWidth: "500px",
               }}
             >
-              <div className="h-full p-8 flex flex-col justify-between">
-                {/* Logo */}
-                <div className="flex items-center justify-between">
-                  <div className="relative w-32 h-12">
-                    <Image
-                      src="/images/logos/aaire-logo-black.png"
-                      alt="AAIRE Co."
-                      fill
-                      className="object-contain object-left"
-                    />
-                  </div>
-                  <p className="text-[#0d1b2a]/60 text-xs italic font-medium">
+              <div className="h-full p-8 flex items-center justify-between gap-4">
+                {/* Left: Brand text */}
+                <div className="flex-shrink-0">
+                  <h1 className="text-2xl font-bold text-[#0d1b2a] mb-1 leading-tight">
+                    AAIRE Co.
+                  </h1>
+                  <p className="text-[#0d1b2a]/80 text-xs font-semibold tracking-wide">
+                    METAL BUILDINGS
+                  </p>
+                </div>
+
+                {/* Center: Tagline */}
+                <div className="flex-1 text-center">
+                  <p className="text-[#0d1b2a]/60 text-sm italic font-medium">
                     More Than a Supplier
                   </p>
                 </div>
 
-                {/* Contact Info */}
-                <div className="space-y-1">
-                  <p className="text-[#0d1b2a] text-sm font-medium">
-                    Alex Esposito
-                  </p>
-                  <p className="text-[#0d1b2a]/70 text-xs">
-                    Certified Worldwide Steel Buildings Distributor
-                  </p>
+                {/* Right: Logo (large) */}
+                <div className="relative w-40 h-24 flex-shrink-0">
+                  <Image
+                    src="/images/logos/aaire-logo-black.png"
+                    alt="AAIRE Co."
+                    fill
+                    className="object-contain"
+                  />
                 </div>
+              </div>
+
+              {/* Bottom: Contact Info */}
+              <div className="absolute bottom-4 left-8">
+                <p className="text-[#0d1b2a] text-xs font-medium">
+                  Alex Esposito
+                </p>
+                <p className="text-[#0d1b2a]/70 text-[10px]">
+                  Certified Worldwide Steel Buildings Distributor
+                </p>
               </div>
             </div>
           </motion.div>
