@@ -18,25 +18,24 @@ export default function BusinessCardPage() {
       const html2canvas = (await import('html2canvas')).default;
 
       const canvas = await html2canvas(elementRef.current, {
-        scale: 3, // Higher resolution for print quality
-        backgroundColor: null,
-        logging: false,
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: true,
+        removeContainer: true,
+        imageTimeout: 0,
       });
 
-      // Convert to JPG
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = filename;
-          link.click();
-          URL.revokeObjectURL(url);
-        }
-      }, 'image/jpeg', 0.95);
+      // Convert to JPG and download
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const link = document.createElement('a');
+      link.href = imgData;
+      link.download = filename;
+      link.click();
     } catch (error) {
       console.error('Error generating image:', error);
-      alert('Failed to generate image. Please try again.');
+      alert(`Failed to generate image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
   return (
