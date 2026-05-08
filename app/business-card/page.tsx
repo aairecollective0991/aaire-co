@@ -14,28 +14,31 @@ export default function BusinessCardPage() {
     if (!elementRef.current) return;
 
     try {
-      // Dynamically import html2canvas
       const html2canvas = (await import('html2canvas')).default;
 
       const canvas = await html2canvas(elementRef.current, {
         scale: 3,
         useCORS: true,
-        allowTaint: true,
+        allowTaint: false,
         backgroundColor: '#ffffff',
-        logging: true,
+        logging: false,
         removeContainer: true,
-        imageTimeout: 0,
+        ignoreElements: (element) => {
+          // Ignore elements that might cause issues
+          return element.classList?.contains('shadow-2xl') || false;
+        },
       });
 
-      // Convert to JPG and download
       const imgData = canvas.toDataURL('image/jpeg', 0.95);
       const link = document.createElement('a');
       link.href = imgData;
       link.download = filename;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
     } catch (error) {
       console.error('Error generating image:', error);
-      alert(`Failed to generate image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert(`Export failed. Using browser screenshot instead: Right-click card > Inspect > Capture node screenshot`);
     }
   };
   return (
@@ -68,11 +71,12 @@ export default function BusinessCardPage() {
             </div>
             <div
               ref={navyFrontRef}
-              className="bg-[#0d1b2a] rounded-lg shadow-2xl overflow-hidden"
+              className="bg-[#0d1b2a] overflow-hidden"
               style={{
                 aspectRatio: "3.5 / 2",
                 width: "100%",
                 maxWidth: "500px",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
               }}
             >
               <div className="h-full p-8 flex flex-col justify-between relative">
@@ -120,11 +124,12 @@ export default function BusinessCardPage() {
             </div>
             <div
               ref={navyBackRef}
-              className="bg-[#0d1b2a] rounded-lg shadow-2xl overflow-hidden"
+              className="bg-[#0d1b2a] overflow-hidden"
               style={{
                 aspectRatio: "3.5 / 2",
                 width: "100%",
                 maxWidth: "500px",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
               }}
             >
               <div className="h-full p-8 flex flex-col justify-between">
@@ -182,11 +187,12 @@ export default function BusinessCardPage() {
             </div>
             <div
               ref={goldFrontRef}
-              className="bg-[#C9A96E] rounded-lg shadow-2xl overflow-hidden"
+              className="bg-[#C9A96E] overflow-hidden"
               style={{
                 aspectRatio: "3.5 / 2",
                 width: "100%",
                 maxWidth: "500px",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
               }}
             >
               <div className="h-full p-8 flex flex-col justify-between">
@@ -236,11 +242,12 @@ export default function BusinessCardPage() {
             </div>
             <div
               ref={goldBackRef}
-              className="bg-[#C9A96E] rounded-lg shadow-2xl overflow-hidden"
+              className="bg-[#C9A96E] overflow-hidden"
               style={{
                 aspectRatio: "3.5 / 2",
                 width: "100%",
                 maxWidth: "500px",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
               }}
             >
               <div className="h-full p-8 flex flex-col justify-between">
