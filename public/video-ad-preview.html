@@ -100,6 +100,16 @@
       padding: 40px;
     }
 
+    .final::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 20px;
+      background: #C9A96E;
+    }
+
     .final .line1 {
       font-size: 65px;
       color: white;
@@ -129,12 +139,25 @@
       position: absolute;
       bottom: 30px;
       left: 30px;
-      font-size: 35px;
       font-weight: bold;
       color: white;
       opacity: 0.9;
       text-shadow: 0 2px 10px rgba(0,0,0,0.8);
       z-index: 100;
+    }
+
+    .logo .company {
+      font-size: 40px;
+      display: block;
+      line-height: 1;
+    }
+
+    .logo .tagline {
+      font-size: 22px;
+      color: #C9A96E;
+      display: block;
+      margin-top: 5px;
+      letter-spacing: 1px;
     }
 
     /* Controls */
@@ -214,7 +237,10 @@
       </div>
 
       <!-- Logo (always visible) -->
-      <div class="logo">AAIRE Co.</div>
+      <div class="logo">
+        <span class="company">AAIRE Co.</span>
+        <span class="tagline">METAL BUILDINGS</span>
+      </div>
     </div>
 
     <div class="controls">
