@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AAIRE Co. Video Ad Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -17,7 +20,7 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      font-family: 'Arial Black', Arial, sans-serif;
+      font-family: 'Inter', sans-serif;
     }
 
     .container {
@@ -54,8 +57,9 @@
     /* Opening text (0-8s) */
     .opening {
       top: 15%;
+      font-family: 'Playfair Display', serif;
       font-size: 80px;
-      font-weight: bold;
+      font-weight: 900;
       color: white;
       text-shadow: 0 4px 20px rgba(0,0,0,0.8);
       background: rgba(13, 27, 42, 0.85);
@@ -70,8 +74,9 @@
     .middle {
       top: 50%;
       transform: translateY(-50%);
+      font-family: 'Playfair Display', serif;
       font-size: 70px;
-      font-weight: bold;
+      font-weight: 900;
       color: white;
       text-shadow:
         0 0 20px rgba(0,0,0,0.9),
@@ -82,7 +87,9 @@
     }
 
     .middle .line2 {
+      font-family: 'Inter', sans-serif;
       font-size: 55px;
+      font-weight: 700;
       margin-top: 10px;
     }
 
@@ -111,13 +118,16 @@
     }
 
     .final .line1 {
+      font-family: 'Inter', sans-serif;
       font-size: 65px;
       color: white;
       margin-bottom: 20px;
-      font-weight: 900;
+      font-weight: 700;
+      letter-spacing: 1px;
     }
 
     .final .line2 {
+      font-family: 'Playfair Display', serif;
       font-size: 90px;
       color: #C9A96E;
       margin-bottom: 40px;
@@ -126,12 +136,14 @@
     }
 
     .final .line3 {
+      font-family: 'Inter', sans-serif;
       font-size: 50px;
       color: white;
-      font-weight: bold;
+      font-weight: 700;
       background: rgba(201, 169, 110, 0.2);
       padding: 20px 40px;
       border-radius: 10px;
+      letter-spacing: 1px;
     }
 
     /* Logo */
@@ -147,17 +159,21 @@
     }
 
     .logo .company {
+      font-family: 'Playfair Display', serif;
       font-size: 40px;
       display: block;
       line-height: 1;
+      font-weight: 900;
     }
 
     .logo .tagline {
+      font-family: 'Inter', sans-serif;
       font-size: 22px;
       color: #C9A96E;
       display: block;
       margin-top: 5px;
-      letter-spacing: 1px;
+      letter-spacing: 2px;
+      font-weight: 700;
     }
 
     /* Controls */
