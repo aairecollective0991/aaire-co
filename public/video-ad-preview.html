@@ -54,7 +54,7 @@
       transition: opacity 0.5s ease;
     }
 
-    /* Opening text (0-8s) */
+    /* Opening text (0-5s) */
     .opening {
       top: 15%;
       font-family: 'Playfair Display', serif;
@@ -70,7 +70,7 @@
       display: inline-block;
     }
 
-    /* Middle text (8-20s) */
+    /* Middle text (5-13s) */
     .middle {
       top: 50%;
       transform: translateY(-50%);
@@ -93,7 +93,7 @@
       margin-top: 10px;
     }
 
-    /* Final frame (20-30s) */
+    /* Final frame (13-20s) */
     .final {
       top: 0;
       left: 0;
@@ -294,29 +294,34 @@
       final.classList.remove('visible');
     }
 
-    // Text timing
+    // Text timing (20 second version)
     video.addEventListener('timeupdate', () => {
       const time = video.currentTime;
 
-      // Opening (0-8s)
-      if (time >= 0 && time < 8) {
+      // Opening (0-5s)
+      if (time >= 0 && time < 5) {
         opening.classList.add('visible');
       } else {
         opening.classList.remove('visible');
       }
 
-      // Middle (8-20s)
-      if (time >= 8 && time < 20) {
+      // Middle (5-13s)
+      if (time >= 5 && time < 13) {
         middle.classList.add('visible');
       } else {
         middle.classList.remove('visible');
       }
 
-      // Final (20-30s)
-      if (time >= 20) {
+      // Final (13-20s)
+      if (time >= 13 && time < 20) {
         final.classList.add('visible');
       } else {
         final.classList.remove('visible');
+      }
+
+      // Stop video at 20 seconds
+      if (time >= 20) {
+        video.pause();
       }
     });
 
