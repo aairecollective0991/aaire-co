@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AAIRE Co. Video Ad Preview</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Arial Black', Arial, sans-serif;
+    }
+
+    .container {
+      position: relative;
+      width: 1080px;
+      height: 1080px;
+      background: #000;
+      overflow: hidden;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .text-overlay {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    /* Opening text (0-8s) */
+    .opening {
+      top: 15%;
+      font-size: 80px;
+      font-weight: bold;
+      color: white;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.8);
+      background: rgba(13, 27, 42, 0.85);
+      padding: 30px 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: auto;
+      display: inline-block;
+    }
+
+    /* Middle text (8-20s) */
+    .middle {
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 70px;
+      font-weight: bold;
+      color: white;
+      text-shadow:
+        0 0 20px rgba(0,0,0,0.9),
+        0 0 40px rgba(201, 169, 110, 0.6),
+        3px 3px 0 #C9A96E,
+        -3px -3px 0 #C9A96E;
+      line-height: 1.3;
+    }
+
+    .middle .line2 {
+      font-size: 55px;
+      margin-top: 10px;
+    }
+
+    /* Final frame (20-30s) */
+    .final {
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(13, 27, 42, 0.92);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+    }
+
+    .final .line1 {
+      font-size: 65px;
+      color: white;
+      margin-bottom: 20px;
+      font-weight: 900;
+    }
+
+    .final .line2 {
+      font-size: 90px;
+      color: #C9A96E;
+      margin-bottom: 40px;
+      font-weight: 900;
+      text-shadow: 0 4px 20px rgba(201, 169, 110, 0.5);
+    }
+
+    .final .line3 {
+      font-size: 50px;
+      color: white;
+      font-weight: bold;
+      background: rgba(201, 169, 110, 0.2);
+      padding: 20px 40px;
+      border-radius: 10px;
+    }
+
+    /* Logo */
+    .logo {
+      position: absolute;
+      bottom: 30px;
+      left: 30px;
+      font-size: 35px;
+      font-weight: bold;
+      color: white;
+      opacity: 0.9;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+      z-index: 100;
+    }
+
+    /* Controls */
+    .controls {
+      position: absolute;
+      bottom: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+    }
+
+    button {
+      background: #C9A96E;
+      color: #0d1b2a;
+      border: none;
+      padding: 15px 30px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.3s;
+    }
+
+    button:hover {
+      background: #b8954f;
+      transform: translateY(-2px);
+    }
+
+    .instructions {
+      position: absolute;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(201, 169, 110, 0.1);
+      padding: 20px 40px;
+      border-radius: 10px;
+      text-align: center;
+      color: #C9A96E;
+      font-size: 16px;
+      font-family: Arial, sans-serif;
+      white-space: nowrap;
+    }
+
+    .visible {
+      opacity: 1 !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="instructions">
+      ⬇️ Press Win+G to start screen recording, then click Play ⬇️
+    </div>
+
+    <video id="video" playsinline>
+      <source src="/videos/donald_ryan_web.mp4" type="video/mp4">
+    </video>
+
+    <div class="overlay">
+      <!-- Opening (0-8s) -->
+      <div class="text-overlay opening" id="opening">
+        Planning a Metal Building?
+      </div>
+
+      <!-- Middle (8-20s) -->
+      <div class="text-overlay middle" id="middle">
+        <div>Expert Guidance</div>
+        <div class="line2">From Design to Delivery</div>
+      </div>
+
+      <!-- Final (20-30s) -->
+      <div class="text-overlay final" id="final">
+        <div class="line1">Get Your FREE</div>
+        <div class="line2">Buyer's Guide</div>
+        <div class="line3">aaireco.com/download</div>
+      </div>
+
+      <!-- Logo (always visible) -->
+      <div class="logo">AAIRE Co.</div>
+    </div>
+
+    <div class="controls">
+      <button onclick="playVideo()">▶ Play</button>
+      <button onclick="resetVideo()">↻ Reset</button>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('video');
+    const opening = document.getElementById('opening');
+    const middle = document.getElementById('middle');
+    const final = document.getElementById('final');
+
+    function playVideo() {
+      video.currentTime = 0;
+      video.play();
+    }
+
+    function resetVideo() {
+      video.pause();
+      video.currentTime = 0;
+      opening.classList.remove('visible');
+      middle.classList.remove('visible');
+      final.classList.remove('visible');
+    }
+
+    // Text timing
+    video.addEventListener('timeupdate', () => {
+      const time = video.currentTime;
+
+      // Opening (0-8s)
+      if (time >= 0 && time < 8) {
+        opening.classList.add('visible');
+      } else {
+        opening.classList.remove('visible');
+      }
+
+      // Middle (8-20s)
+      if (time >= 8 && time < 20) {
+        middle.classList.add('visible');
+      } else {
+        middle.classList.remove('visible');
+      }
+
+      // Final (20-30s)
+      if (time >= 20) {
+        final.classList.add('visible');
+      } else {
+        final.classList.remove('visible');
+      }
+    });
+
+    // Auto-reset when ended
+    video.addEventListener('ended', () => {
+      setTimeout(resetVideo, 1000);
+    });
+  </script>
+</body>
+</html>
