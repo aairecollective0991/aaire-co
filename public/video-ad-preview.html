@@ -70,7 +70,7 @@
       display: inline-block;
     }
 
-    /* Middle text (5-13s) */
+    /* Middle text (5-9s) */
     .middle {
       top: 50%;
       transform: translateY(-50%);
@@ -93,7 +93,7 @@
       margin-top: 10px;
     }
 
-    /* Final frame (13-20s) */
+    /* Final frame (9-20s) */
     .final {
       top: 0;
       left: 0;
@@ -305,15 +305,15 @@
         opening.classList.remove('visible');
       }
 
-      // Middle (5-13s)
-      if (time >= 5 && time < 13) {
+      // Middle (5-9s)
+      if (time >= 5 && time < 9) {
         middle.classList.add('visible');
       } else {
         middle.classList.remove('visible');
       }
 
-      // Final (13-20s)
-      if (time >= 13 && time < 20) {
+      // Final (9-20s)
+      if (time >= 9 && time < 20) {
         final.classList.add('visible');
       } else {
         final.classList.remove('visible');
