@@ -177,16 +177,12 @@ export default function QuoteBuilderPage() {
         body: formData,
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to parse PDF");
-      }
-
       const parsedData = await response.json();
 
       // Check if response contains error details
-      if (parsedData.error) {
+      if (!response.ok || parsedData.error) {
         console.error("Server error:", parsedData);
-        alert(`Failed to parse PDF:\n\n${parsedData.details}\n\nType: ${parsedData.type}\n\nCheck console for full details.`);
+        alert(`Failed to parse PDF:\n\n${parsedData.details || parsedData.error || 'Unknown error'}\n\nType: ${parsedData.type || 'Unknown'}\n\nCheck browser console for full details.`);
         return;
       }
 
