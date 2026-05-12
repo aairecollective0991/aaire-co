@@ -183,6 +183,13 @@ export default function QuoteBuilderPage() {
 
       const parsedData = await response.json();
 
+      // Check if response contains error details
+      if (parsedData.error) {
+        console.error("Server error:", parsedData);
+        alert(`Failed to parse PDF:\n\n${parsedData.details}\n\nType: ${parsedData.type}\n\nCheck console for full details.`);
+        return;
+      }
+
       // Update quote with parsed data
       setQuote({
         ...quote,

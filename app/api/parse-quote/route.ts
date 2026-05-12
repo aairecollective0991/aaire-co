@@ -401,9 +401,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     console.error("!!! Error parsing PDF:", error);
+    console.error("Error type:", typeof error);
+    console.error("Error name:", error instanceof Error ? error.name : "Unknown");
+    console.error("Error message:", error instanceof Error ? error.message : String(error));
     console.error("Error stack:", error instanceof Error ? error.stack : "No stack");
+
+    // Return detailed error for debugging
     return NextResponse.json(
-      { error: "Failed to parse PDF", details: String(error) },
+      {
+        error: "Failed to parse PDF",
+        details: error instanceof Error ? error.message : String(error),
+        type: error instanceof Error ? error.name : typeof error,
+        stack: error instanceof Error ? error.stack : undefined
+      },
       { status: 500 }
     );
   }
