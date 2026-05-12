@@ -176,7 +176,7 @@ type QuoteData = {
 export const QuotePDF = ({ quote }: { quote: QuoteData }) => {
   const discount = quote.buildingPrice * (quote.additionalDiscount / 100);
   const finalPrice = quote.buildingPrice - discount + quote.salesTax;
-  const deposit = finalPrice * 0.25;
+  const deposit = Math.round(finalPrice * 0.25 * 100) / 100; // Round to 2 decimal places
 
   return (
     <Document>
