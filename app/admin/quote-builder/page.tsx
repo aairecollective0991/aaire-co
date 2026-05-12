@@ -206,7 +206,8 @@ export default function QuoteBuilderPage() {
   };
 
   const calculateDeposit = () => {
-    return calculateFinalPrice() * 0.25; // 25% deposit
+    const deposit = calculateFinalPrice() * 0.25; // 25% deposit
+    return Math.round(deposit * 100) / 100; // Round to 2 decimal places
   };
 
   if (!isAuthenticated) {
@@ -991,10 +992,12 @@ function QuotePreview({
             <div>
               <p className="text-[#0d1b2a]/60">Steel Truss</p>
               <p className="font-semibold text-[#0d1b2a]">{quote.steelTrussWarranty}</p>
+              <p className="text-xs text-[#0d1b2a]/60 mt-1">(Manufacturer's Warranty)</p>
             </div>
             <div>
               <p className="text-[#0d1b2a]/60">Steel Sheeting</p>
               <p className="font-semibold text-[#0d1b2a]">{quote.steelSheetingWarranty}</p>
+              <p className="text-xs text-[#0d1b2a]/60 mt-1">(Manufacturer's Warranty)</p>
             </div>
           </div>
         </div>

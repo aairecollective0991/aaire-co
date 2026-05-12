@@ -345,11 +345,11 @@ export const QuotePDF = ({ quote }: { quote: QuoteData }) => {
           <Text style={styles.sectionTitle}>Warranty</Text>
           <View style={styles.row}>
             <Text style={styles.label}>Steel Truss</Text>
-            <Text style={styles.value}>{quote.steelTrussWarranty}</Text>
+            <Text style={styles.value}>{quote.steelTrussWarranty} (Manufacturer's Warranty)</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Steel Sheeting</Text>
-            <Text style={styles.value}>{quote.steelSheetingWarranty}</Text>
+            <Text style={styles.value}>{quote.steelSheetingWarranty} (Manufacturer's Warranty)</Text>
           </View>
         </View>
 
