@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PDFParse } from "pdf-parse";
 
+// Force Node.js runtime for native dependencies
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 // Use pdf-parse for server-side parsing
 async function parsePdf(buffer: Buffer): Promise<{ text: string; numpages: number }> {
   console.log("  - Parsing PDF with PDFParse...");
