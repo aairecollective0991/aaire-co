@@ -3,30 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 // Use pdf-parse for server-side parsing
 async function parsePdf(buffer: Buffer): Promise<{ text: string; numpages: number }> {
   console.log("  - Importing pdf-parse...");
-  const { PDFParse } = await import("pdf-parse");
-  console.log("  - Creating PDFParse instance...");
-  const parser = new PDFParse({
-    data: buffer,
-    useWorkerFetch: false,
-    isEvalSupported: false,
-  });
-  console.log("  - Loading document...");
-  await parser.load();
-  console.log("  - Extracting text from", parser.doc?.numPages, "pages");
+  const pdfParse = (await import("pdf-parse")).default;
+  console.log("  - Parsing PDF...");
 
-  // Extract text from all pages
-  let fullText = '';
-  const numPages = parser.doc?.numPages || 0;
+  const data = await pdfParse(buffer);
 
-  for (let i = 1; i <= numPages; i++) {
-    const page = await parser.doc!.getPage(i);
-    const textContent = await page.getTextContent();
-    const pageText = textContent.items.map((item: any) => item.str).join(' ');
-    fullText += pageText + '\n';
-  }
-
-  console.log("  - Text extraction complete, length:", fullText.length);
-  return { text: fullText, numpages: numPages };
+  console.log("  - Text extraction complete, pages:", data.numpages, "length:", data.text.length);
+  return { text: data.text, numpages: data.numpages };
 }
 
 type ParsedQuote = {
