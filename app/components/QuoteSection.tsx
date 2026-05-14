@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import QuoteForm from "./QuoteForm";
 
 const trustCards = [
   {
@@ -36,16 +36,6 @@ const trustCards = [
 ];
 
 export default function QuoteSection() {
-  useEffect(() => {
-    // Load GHL embed script dynamically to comply with Next.js client boundaries
-    if (document.getElementById("ghl-embed-script")) return;
-    const script = document.createElement("script");
-    script.id = "ghl-embed-script";
-    script.src = "https://link.msgsndr.com/js/form_embed.js";
-    script.async = true;
-    document.body.appendChild(script);
-  }, []);
-
   return (
     <section
       id="quote"
@@ -119,7 +109,7 @@ export default function QuoteSection() {
             </div>
           </div>
 
-          {/* Right: GHL Survey Iframe */}
+          {/* Right: Quote Form */}
           <div className="relative">
             <div className="rounded-sm overflow-hidden border border-[#0d1b2a]/10 shadow-xl shadow-[#0d1b2a]/5">
               <div className="bg-[#0d1b2a] px-5 py-4 flex items-center gap-2">
@@ -128,13 +118,9 @@ export default function QuoteSection() {
                   Free Quote Request
                 </span>
               </div>
-              <iframe
-                src="https://api.leadconnectorhq.com/widget/survey/BDwEFta1ikJd7NU8wGB9"
-                style={{ border: "none", width: "100%", minHeight: "600px" }}
-                scrolling="no"
-                id="BDwEFta1ikJd7NU8wGB9"
-                title="Free Quote Survey"
-              />
+              <div className="p-6">
+                <QuoteForm />
+              </div>
             </div>
           </div>
         </div>

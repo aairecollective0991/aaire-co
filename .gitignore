@@ -39,3 +39,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Large files - keep out of git
+/render/
+/render_siteprep/
+*.blend
+*.blend1
+*.skp
+*_archive.mp4
+*_web.mp4
+*_poster.jpg
+**/*.pdf
+
+# Quote input PDFs
+quote-inputs/*.pdf
