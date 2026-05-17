@@ -90,87 +90,85 @@ function parseQuoteText(text: string): Omit<ParsedQuote, "images"> {
   // Clean up text - remove extra whitespace but keep structure
   const cleanText = text.replace(/\s+/g, " ").trim();
 
-  // Extract quote number and date
-  const quoteNumber = extractField(cleanText, /Quote\s*#\s*(\d+[A-Z]+)/i);
+  // Quote number — trailing letters are optional (e.g. 868282HW or 868344)
+  const quoteNumber = extractField(cleanText, /Quote\s*#\s*(\d+[A-Z]*)/i);
   const date = extractField(cleanText, /Date\s*(\d{1,2}\/\d{1,2}\/\d{4})/i);
 
-  // Extract customer name from "AAIRE Co. (Name)" format
+  // Customer name from "AAIRE Co. (Name)" format
   const customerName = extractField(cleanText, /AAIRE Co\.\s*\(([^)]+)\)/i);
 
-  // Extract address - appears before "Building Consultant:"
-  const street = extractField(cleanText, /(\d+\s+[A-Za-z\s]+(?:Cir|St|Ave|Dr|Rd|Ln|Way|Blvd)[^\d]*?)\s+(?:Building Consultant|Concord)/i);
+  // Street address — number + street + suffix, terminated by "Building Consultant"
+  const street = extractField(cleanText, /(\d+\s+[A-Za-z\s]+(?:Cir|St|Ave|Dr|Rd|Ln|Way|Blvd)[^\d]*?)\s+Building Consultant/i);
 
-  // City, State, Zip appear in sequence after street
-  const city = extractField(cleanText, /512 Channing Cir Nw\s+Building Consultant.*?Building Type.*?([A-Za-z]+)\s+Consultant Phone/i) ||
-               extractField(cleanText, /Building Dimension.*?([A-Za-z]+)\s+Consultant Phone/i);
+  // City — between "Stamped Engineered Plans" and "Consultant Phone" (handles multi-word cities)
+  const city = extractField(cleanText, /Stamped Engineered Plans\s+([A-Za-z]+(?:\s+[A-Za-z]+)*?)\s+Consultant Phone/i);
 
   const state = extractField(cleanText, /Consultant Phone.*?([A-Z]{2})\s+Consultant Email/i);
   const zip = extractField(cleanText, /Consultant Email.*?(\d{5}-?\d{4})/i);
-  // Customer phone appears right after zip code
   const phone = extractField(cleanText, /\d{5}-\d{4}\s+(\(\d{3}\)\s*\d{3}-\d{4})/i);
 
-  // Building type
-  const buildingType = extractField(cleanText, /Building Type:\s*([A-Za-z\s&]+?)(?:\s+Building Dimension)/i);
+  // Building type — terminator varies by PDF: either "Building Dimension" follows, or it's at end of text
+  const buildingType = extractField(cleanText, /Building Type:\s+([A-Za-z& ]+?)(?=\s+Building Dimension|\s*$)/i);
 
-  // Extract dimensions - they appear in order: width, length, eave height
-  const width = extractField(cleanText, /Consultant Email.*?\d{5}-\d{4}\s+\(\d{3}\)\s*\d{3}-\d{4}\s+(\d{1,3})\s+Wind Speed/i);
-  const length = extractField(cleanText, /Wind Speed\s+Building.*?(\d{1,3})\s+Ground Snow/i);
-  const eaveHeight = extractField(cleanText, /Ground Snow\s+Foundation.*?(\d{1,3})\s+Collateral Load/i);
-  const roofPitch = extractField(cleanText, /Building Type\s+Wood\s+([\d:/.]+)\s+/i);
+  // Dimensions — value-before-label so they survive text-order variations across PDFs
+  const width = extractField(cleanText, /(\d{1,3})\s+Wind Speed/i);
+  const length = extractField(cleanText, /(\d{1,3})\s+Ground Snow/i);
+  const eaveHeight = extractField(cleanText, /(\d{1,3})\s+Collateral Load/i);
+  // Pitch like 1:12 or 2:12, anchored on the style word that follows
+  const roofPitch = extractField(cleanText, /(\d+:\d+)\s+(?:Single Slope|Gable|A-Frame)/i);
 
-  // Extract loads and specs
+  // Loads and specs
   const windSpeed = extractField(cleanText, /(\d{2,3}\s*Mph)/i);
-  const groundSnow = extractField(cleanText, /Ground Snow.*?(\d+\s*lb\.?)/i) || "10 lb.";
+  const groundSnow = extractField(cleanText, /(\d+\s*lb\.?)/i);
   const collateralLoad = extractField(cleanText, /(\d+\s*PSF)/i);
-  const style = extractField(cleanText, /(Single Slope|Gable|A-Frame)/i);
-  const trussType = extractField(cleanText, /Truss Type\s+(Web Truss|[A-Za-z\s]+?)(?:\s+\*|$)/i);
+  // Style — anchor on preceding pitch to avoid matching "Gable Extension"
+  const style = extractField(cleanText, /\d+:\d+\s+(Single Slope|Gable|A-Frame)/i);
+  // Truss type — flexible terminator (asterisk, digit, or end-of-string)
+  const trussType = extractField(cleanText, /Truss Type\s+([A-Za-z]+(?:\s+[A-Za-z]+)*?)(?=\s+\*|\s+\d|\s*$)/i);
 
-  // Extract stamped plans
-  const buildingPlans = extractField(cleanText, /Building\s+(YES|NO)/i) || "YES";
-  const foundationPlans = extractField(cleanText, /Foundation\s+(YES|NO)/i) || "YES";
-  const buildingTypeWood = extractField(cleanText, /Building Type\s+(Wood|Steel)/i) || "Wood";
+  // Stamped plans
+  const buildingPlans = extractField(cleanText, /Building\s+(YES|NO)/i);
+  const foundationPlans = extractField(cleanText, /Foundation\s+(YES|NO)/i);
+  const buildingTypeWood = extractField(cleanText, /Building Type\s+(Wood|Steel)/i);
 
-  // Extract colors from Steel Sheeting Color section
-  // The table labels and values get separated in extraction, so we default to TBD
-  // In future, when actual colors are specified, we'll need to parse them differently
-  const roofColor = "TBD";
-  const wallsColor = "TBD";
-  const wainscotColor = "TBD";
-  const doorsColor = "TBD";
-  const trimColor = "TBD";
+  // Colors — flattened table makes per-position extraction unreliable.
+  // Left blank rather than hardcoding "TBD"; UI can prompt for these when needed.
+  const roofColor = "";
+  const wallsColor = "";
+  const wainscotColor = "";
+  const doorsColor = "";
+  const trimColor = "";
   const soffitColor = "";
 
-  // Extract package includes - stop at "Included Options:"
-  const packageSection = extractField(cleanText, /Package Includes:(.*?)(?:Included Options:|$)/is);
+  // Package includes — scan the entire text so item order across PDFs doesn't matter
   const packageIncludes: string[] = [];
-
-  if (packageSection) {
-    if (packageSection.includes("Trusses And Truss Hardware")) packageIncludes.push("Trusses And Truss Hardware");
-    if (packageSection.match(/Pre-Cut Sheeting.*?(\d{2,3}[, ]*000)\s*PSI/i)) {
-      const psi = extractField(packageSection, /Pre-Cut Sheeting.*?(\d{2,3}[,\s]*000\s*PSI)/i);
-      packageIncludes.push(`Pre-Cut Sheeting (${psi.replace(/[,\s]/g, "")})`);
-    }
-    if (packageSection.includes("Self-Drilling")) packageIncludes.push("Self-Drilling Sheeting Screws With Neoprene Washers");
-    if (packageSection.includes("Elevation")) packageIncludes.push("Elevation & Pier Placement Plans");
-    if (packageSection.includes("Hybrid Wood")) packageIncludes.push("Hybrid Wood Cut List Edge Mounted On 2' Centers");
-    if (packageSection.match(/\(\d+\)\s*Complimentary Window/i)) {
-      const windows = extractField(packageSection, /(\(\d+\)\s*Complimentary Window[^I]+?)(?:Included|$)/i);
-      packageIncludes.push(windows.trim() || "(4) Complimentary Window Frame & Trim Kits");
-    }
+  if (cleanText.match(/Trusses And Truss Hardware/i)) packageIncludes.push("Trusses And Truss Hardware");
+  const psiMatch = cleanText.match(/Pre-Cut Sheeting\s+(\d{2,3}[,\s‚]*000)\s*PSI/i);
+  if (psiMatch) {
+    packageIncludes.push(`Pre-Cut Sheeting (${psiMatch[1].replace(/[,\s‚]/g, "")} PSI)`);
   }
+  if (cleanText.match(/Self-Drilling Sheeting Screws/i)) packageIncludes.push("Self-Drilling Sheeting Screws With Neoprene Washers");
+  if (cleanText.match(/Elevation & Pier Placement Plans/i)) packageIncludes.push("Elevation & Pier Placement Plans");
+  if (cleanText.match(/Hybrid Wood Cut List/i)) packageIncludes.push("Hybrid Wood Cut List Edge Mounted On 2' Centers");
+  if (cleanText.match(/Steel Purlins\/Girts/i)) packageIncludes.push("Steel Purlins/Girts Edge Mounted On 2' Centers");
+  const windowsMatch = cleanText.match(/\((\d+)\)\s*Complimentary Window Frame & Trim Kits/i);
+  if (windowsMatch) packageIncludes.push(`(${windowsMatch[1]}) Complimentary Window Frame & Trim Kits`);
 
-  // Extract included options
+  // Included options — scan the entire text for known option names
   const includedOptions: string[] = [];
-  const optionsSection = extractField(cleanText, /Included Options:(.*?)(?:Warranty Info|Must ship by|$)/is);
-  if (optionsSection) {
-    if (optionsSection.match(/Eave Extension LSW/i)) includedOptions.push("Eave Extension LSW");
-    if (optionsSection.match(/No Sheeting on RSW/i)) includedOptions.push("No Sheeting on RSW");
-    if (optionsSection.match(/Gable Extension FEW/i)) includedOptions.push("Gable Extension FEW");
-    if (optionsSection.match(/Gable Extension REW/i)) includedOptions.push("Gable Extension REW");
-    if (optionsSection.match(/Framed Opening for Double Walkdoor/i)) {
-      includedOptions.push("Framed Opening for Double Walkdoor - Wood Pkg");
-    }
-  }
+  if (cleanText.match(/Eave Extension LSW/i)) includedOptions.push("Eave Extension LSW");
+  if (cleanText.match(/Eave Extension RSW/i)) includedOptions.push("Eave Extension RSW");
+  if (cleanText.match(/No Sheeting on RSW/i)) includedOptions.push("No Sheeting on RSW");
+  if (cleanText.match(/Gable Extension FEW/i)) includedOptions.push("Gable Extension FEW");
+  if (cleanText.match(/Gable Extension REW/i)) includedOptions.push("Gable Extension REW");
+  if (cleanText.match(/Framed Opening for Double Walkdoor/i)) includedOptions.push("Framed Opening for Double Walkdoor - Wood Pkg");
+  if (cleanText.match(/Framed Opening for Walkdoor(?! - Wood)/i)) includedOptions.push("Framed Opening for Walkdoor");
+  if (cleanText.match(/Framed Opening for Overhead Sectional Door/i)) includedOptions.push("Framed Opening for Overhead Sectional Door");
+  if (cleanText.match(/Framed Opening for Windows/i)) includedOptions.push("Framed Opening for Windows");
+  if (cleanText.match(/Portal Frame LF/i)) includedOptions.push("Portal Frame LF");
+  if (cleanText.match(/Thermal Break Walls/i)) includedOptions.push("Thermal Break Walls");
+  if (cleanText.match(/Thermal Break Roof/i)) includedOptions.push("Thermal Break Roof");
+  if (cleanText.match(/Mezzanine \(Post Supported\)/i)) includedOptions.push("Mezzanine (Post Supported)");
 
   // Extract must ship by date
   const mustShipBy = extractField(cleanText, /Must ship by (\d{1,2}\/\d{1,2}\/\d{2,4})/i);
@@ -198,19 +196,22 @@ function parseQuoteText(text: string): Omit<ParsedQuote, "images"> {
     });
   }
 
-  // Extract warranty
-  const steelTrussWarranty = extractField(cleanText, /Steel Truss\s+(\d+\s*Years?)/i) || "50 Years";
-  const steelSheetingWarranty = extractField(cleanText, /Steel Sheeting\s+(Lifetime|\d+\s*Years?)/i) || "Lifetime";
+  // Warranty
+  const steelTrussWarranty = extractField(cleanText, /Steel Truss\s+(\d+\s*Years?)/i);
+  const steelSheetingWarranty = extractField(cleanText, /Steel Sheeting\s+(Lifetime|\d+\s*Years?)/i);
 
-  // Extract pricing - values appear in sequence in the flattened text
-  // Order: Building Price, Dealer Discount, Sale Price, Sales Tax, Total, Pricing Good Thru, Initial Payment
+  // Pricing — value sequence in the flattened text is reliably:
+  //   [0] Building Price, [1] Dealer Discount, [2] Sale Price, [3] Sales Tax,
+  //   [4] Total, then DATE (pricing good thru), [5] Initial Payment Due
   const prices = cleanText.match(/\$[\d,]+\.?\d*/g) || [];
   const buildingPrice = prices.length > 0 ? parseFloat(prices[0].replace(/[$,]/g, "")) : 0;
   const dealerDiscount = prices.length > 1 ? parseFloat(prices[1].replace(/[$,]/g, "")) : 0;
   const salesTax = prices.length > 3 ? parseFloat(prices[3].replace(/[$,]/g, "")) : 0;
   const initialPaymentDue = prices.length > 5 ? parseFloat(prices[5].replace(/[$,]/g, "")) : 0;
 
-  const pricingGoodThru = extractField(cleanText, /(\d{1,2}\/\d{1,2}\/\d{4})(?!.*Date)/i);
+  // Pricing Good Thru — date that sits between the 5th price (Total) and 6th (Initial Payment).
+  // More reliable than the old "any date not followed by 'Date'" heuristic.
+  const pricingGoodThru = extractField(cleanText, /\$[\d,]+\.?\d*\s+(\d{1,2}\/\d{1,2}\/\d{4})\s+\$[\d,]+\.?\d*/);
 
   return {
     quoteNumber,

@@ -165,11 +165,13 @@ export default function QuoteBuilderPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (Vercel limit is 4.5MB)
-    const maxSize = 4.5 * 1024 * 1024; // 4.5MB in bytes
-    if (file.size > maxSize) {
+    // Check file size (Vercel serverless function body limit is 4.5MB).
+    // Skip the check on localhost — local dev server has no such limit.
+    const isLocal = typeof window !== 'undefined' && /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
+    const maxSize = 4.5 * 1024 * 1024;
+    if (!isLocal && file.size > maxSize) {
       alert(`PDF file is too large (${(file.size / 1024 / 1024).toFixed(1)} MB).\n\nMaximum size: 4.5 MB\n\nPlease use a smaller PDF or contact support for assistance with large files.`);
-      e.target.value = ''; // Reset file input
+      e.target.value = '';
       return;
     }
 
