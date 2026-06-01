@@ -1,9 +1,18 @@
 import { MetadataRoute } from 'next'
+import { COUNTIES } from './site-check/permit-data'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://aaireco.com'
 
+  const countyPages: MetadataRoute.Sitemap = COUNTIES.map((c) => ({
+    url: `${baseUrl}/site-check/${c.state.toLowerCase()}/${c.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly',
+    priority: 0.6,
+  }))
+
   return [
+    ...countyPages,
     {
       url: baseUrl,
       lastModified: new Date(),
