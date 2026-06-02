@@ -129,56 +129,58 @@ export async function POST(request: NextRequest) {
 
     console.log('Notification email result:', JSON.stringify(notificationResult));
 
-    // Send confirmation email to customer
+    // Send confirmation email to customer (personal note from Alex, replies route to him)
     const confirmationResult = await resend.emails.send({
-      from: "AAIRE Co. Metal Buildings <noreply@notification.aaireco.com>",
+      from: "Alex Esposito - AAIRE Co. Metal Buildings <alex@notification.aaireco.com>",
       to: email,
-      subject: "Thank you for your quote request - AAIRE Co.",
+      replyTo: "aairecollective@gmail.com",
+      subject: "Thank you for reaching out - AAIRE Co. Metal Buildings",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background-color: #0d1b2a; padding: 20px; text-align: center;">
             <h1 style="color: #C9A96E; margin: 0;">AAIRE Co. Metal Buildings</h1>
-            <p style="color: white; margin: 5px 0 0 0;">We received your quote request!</p>
+            <p style="color: white; margin: 5px 0 0 0;">Thanks for reaching out!</p>
           </div>
 
           <div style="padding: 30px; background-color: #f7f5f0;">
-            <p style="color: #0d1b2a; font-size: 16px; margin-bottom: 20px;">
+            <p style="color: #0d1b2a; font-size: 16px; margin: 0 0 20px 0;">
               Hi ${firstName},
             </p>
 
-            <p style="color: #0d1b2a; line-height: 1.6; margin-bottom: 20px;">
-              Thank you for your interest in AAIRE Co. Metal Buildings! We've received your quote request and our team will respond within <strong>2 hours during business hours</strong>.
+            <p style="color: #0d1b2a; line-height: 1.7; margin: 0 0 18px 0;">
+              Thank you for reaching out to AAIRE Co. Metal Buildings.
             </p>
 
-            <div style="background-color: white; padding: 20px; border-left: 4px solid #C9A96E; margin: 25px 0;">
-              <h3 style="color: #0d1b2a; margin-top: 0;">Your Request Details:</h3>
-              <p style="color: #0d1b2a; margin: 5px 0;"><strong>Name:</strong> ${firstName} ${lastName}</p>
-              <p style="color: #0d1b2a; margin: 5px 0;"><strong>Email:</strong> ${email}</p>
-              <p style="color: #0d1b2a; margin: 5px 0;"><strong>Phone:</strong> ${phone}</p>
-              ${buildingType ? `<p style="color: #0d1b2a; margin: 5px 0;"><strong>Building Type:</strong> ${buildingType}</p>` : ""}
-            </div>
+            <p style="color: #0d1b2a; line-height: 1.7; margin: 0 0 18px 0;">
+              Can you tell me more about your project? We specialize in keeping you informed and
+              getting everything you need to know right in front of you.
+            </p>
 
-            <div style="background-color: #C9A96E; padding: 20px; border-radius: 5px; margin: 25px 0; text-align: center;">
-              <h3 style="color: #0d1b2a; margin-top: 0;">Design Your Building</h3>
-              <p style="color: #0d1b2a; margin-bottom: 15px;">
-                AAIRE Co. specializes in thorough pre-planning that helps you select the design you want.
-              </p>
+            <p style="color: #0d1b2a; line-height: 1.7; margin: 0 0 24px 0;">
+              Design your building on the <a href="https://www.worldwidesteelbuildings.com/designer/" style="color: #C9A96E; font-weight: bold; text-decoration: underline;">Designer</a>, hit save and send it my way! Or you can send me
+              any napkin sketch you have and I will get back to you.
+            </p>
+
+            <div style="text-align: center; margin: 28px 0;">
               <a href="https://www.worldwidesteelbuildings.com/designer/"
-                 style="display: inline-block; background-color: #0d1b2a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                Use Our Design Tool
+                 style="display: inline-block; background-color: #C9A96E; color: #0d1b2a; padding: 14px 34px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+                Design Your Building
               </a>
-              <p style="color: #0d1b2a; font-size: 14px; margin-top: 15px; margin-bottom: 0;">
-                Be sure to click Save and send us the results!
+              <p style="color: #0d1b2a; font-size: 14px; margin: 14px 0 0 0;">
+                Hit <strong>Save</strong> in the Designer, then just reply to this email and send it my way.
               </p>
             </div>
 
-            <p style="color: #0d1b2a; line-height: 1.6;">
-              In the meantime, feel free to explore our design tool above or reach out if you have any questions.
-            </p>
+            ${buildingType ? `
+            <div style="background-color: white; padding: 16px 20px; border-left: 4px solid #C9A96E; margin: 24px 0; color: #0d1b2a;">
+              <p style="margin: 0; font-size: 14px;"><strong>Project you told us about:</strong> ${buildingType}</p>
+            </div>` : ""}
 
-            <p style="color: #0d1b2a; margin-top: 25px;">
-              Best regards,<br>
-              <strong>The AAIRE Co. Team</strong>
+            <p style="color: #0d1b2a; line-height: 1.7; margin: 28px 0 0 0;">
+              Thank you,<br><br>
+              <strong>Alex Esposito</strong><br>
+              AAIRE Co. Metal Buildings LLC<br>
+              <a href="mailto:aairecollective@gmail.com" style="color: #C9A96E; text-decoration: none;">aairecollective@gmail.com</a>
             </p>
           </div>
 
