@@ -34,7 +34,7 @@ const whyPoints = [
   },
   {
     title: "Code-Compliant Engineering",
-    body: "Stamped drawings, permit-ready packages, wind and snow loads dialed in for North Carolina. We sweat the paperwork so you don't.",
+    body: "Stamped drawings, permit-ready packages, and wind and snow loads dialed in for your local code. We sweat the paperwork so you don't.",
   },
   {
     title: "Support That Outlasts the Build",
@@ -116,7 +116,7 @@ export default function AboutPage() {
               custom={0.15}
               className="font-[family-name:var(--font-playfair)] text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-[1.1] tracking-tight"
             >
-              Built on Integrity.{" "}
+              Metal Buildings Built on Integrity.{" "}
               <span className="text-[#C9A96E]">Driven by Craftsmanship.</span>
             </motion.h1>
 
@@ -170,10 +170,32 @@ export default function AboutPage() {
                     just a structure that fits.
                   </p>
                   <p>
-                    Whether it&apos;s a barndominium on five acres, a shop for
-                    your equipment, or an agricultural building for the farm —
-                    we&apos;re here to make the process honest, the craftsmanship
-                    visible, and the outcome something you&apos;re proud to own.
+                    Whether it&apos;s a{" "}
+                    <Link href="/metal-buildings/40x60" className="text-[#C9A96E] underline underline-offset-2 hover:text-[#b8954f]">
+                      barndominium
+                    </Link>{" "}
+                    on five acres, a{" "}
+                    <Link href="/metal-buildings/30x40" className="text-[#C9A96E] underline underline-offset-2 hover:text-[#b8954f]">
+                      shop for your equipment
+                    </Link>
+                    , or an{" "}
+                    <Link href="/construction" className="text-[#C9A96E] underline underline-offset-2 hover:text-[#b8954f]">
+                      agricultural building
+                    </Link>{" "}
+                    for the farm — we&apos;re here to make the process honest, the
+                    craftsmanship visible, and the outcome something you&apos;re
+                    proud to own.
+                  </p>
+                  <p>
+                    New to steel? Start with our{" "}
+                    <Link href="/metal-buildings" className="text-[#C9A96E] underline underline-offset-2 hover:text-[#b8954f]">
+                      building sizes &amp; prices
+                    </Link>{" "}
+                    or browse the{" "}
+                    <Link href="/guides" className="text-[#C9A96E] underline underline-offset-2 hover:text-[#b8954f]">
+                      buyer&apos;s guides
+                    </Link>{" "}
+                    to learn what a project really involves.
                   </p>
                 </div>
               </motion.div>
@@ -388,12 +410,20 @@ export default function AboutPage() {
                   Buildings — an American manufacturer with more than four
                   decades of engineering pedigree. Every frame we deliver is
                   pre-engineered, mill-direct, and covered by an industry-leading
-                  50-year structural warranty on primary framing.
+                  50-year structural warranty on primary framing. Learn why our{" "}
+                  <Link href="/why-web-truss" className="text-[#C9A96E] underline underline-offset-2 hover:text-[#b8954f]">
+                    open web truss framing
+                  </Link>{" "}
+                  outperforms conventional construction.
                 </p>
                 <p className="mt-4 text-[#0d1b2a]/80 text-base lg:text-lg leading-relaxed font-[family-name:var(--font-inter)]">
                   That means the building you put up today will still be
                   standing — square, true, and warrantied — half a century from
-                  now.
+                  now. Planning a build? Check your{" "}
+                  <Link href="/site-check" className="text-[#C9A96E] underline underline-offset-2 hover:text-[#b8954f]">
+                    county&apos;s permit and load requirements
+                  </Link>{" "}
+                  before you break ground.
                 </p>
               </motion.div>
             </div>
