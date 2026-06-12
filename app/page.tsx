@@ -5,6 +5,7 @@ import WhyAAIRE from "./components/WhyAAIRE";
 import BuildingGrid from "./components/BuildingGrid";
 import QuoteSection from "./components/QuoteSection";
 import GuideDownloadCTA from "./components/GuideDownloadCTA";
+import HomepageBackground from "./components/HomepageBackground";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <>
+      <HomepageBackground />
       <Hero />
       <TrustStrip />
       <WhyAAIRE />

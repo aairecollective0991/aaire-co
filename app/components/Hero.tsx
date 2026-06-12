@@ -1,24 +1,37 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 import { fadeUp } from "@/app/lib/animations";
+import { useRef } from "react";
 
 export default function Hero() {
+  const ref = useRef(null);
+  const { scrollY } = useScroll();
+
+  // Parallax: background moves at 0.5x scroll speed
+  const imageY = useTransform(scrollY, [0, 800], [0, 400]);
+
   return (
     <section
+      ref={ref}
       id="hero"
       className="relative min-h-screen flex items-center overflow-hidden pt-20"
     >
-      {/* Full-bleed hero background image */}
-      <Image
-        src="/images/hero/hero2.jpg"
-        alt="Steel building in the Carolina landscape"
-        fill
-        className="object-cover object-center"
-        priority
-        quality={85}
-      />
+      {/* Parallax hero background image — moves at 0.5x scroll speed */}
+      <motion.div
+        style={{ y: imageY }}
+        className="absolute inset-0"
+      >
+        <Image
+          src="/images/hero/hero2.jpg"
+          alt="Steel building in the Carolina landscape"
+          fill
+          className="object-cover object-center"
+          priority
+          quality={85}
+        />
+      </motion.div>
 
       {/* Dark navy overlay at 60% opacity */}
       <div className="absolute inset-0 bg-[#0d1b2a]/60" />
