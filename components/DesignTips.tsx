@@ -1,3 +1,8 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { fadeUp } from "@/app/lib/animations";
+
 export default function DesignTips() {
   const tips = [
     {
@@ -39,24 +44,38 @@ export default function DesignTips() {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-12">
-      <div className="mb-8">
-        <h2 className="mb-2 text-2xl font-medium text-neutral-900 dark:text-neutral-100">Design Tips</h2>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+      <motion.div
+        className="mb-8"
+        variants={fadeUp}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        custom={0}
+      >
+        <h2 className="mb-2 text-2xl font-bold text-white font-[family-name:var(--font-playfair)]">Design Tips</h2>
+        <p className="text-sm text-[rgba(220,210,190,0.65)]">
           Things to discuss with us during your consultation — these aren't final specs, just helpful context for planning.
         </p>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <motion.div
+        className="grid grid-cols-1 gap-4 md:grid-cols-2"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+      >
         {tips.map((tip, idx) => (
-          <div
+          <motion.div
             key={idx}
-            className="rounded-lg border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900"
+            variants={fadeUp}
+            custom={idx * 0.06}
+            className="rounded-lg border border-[#1e3a5a] bg-[#162336] p-5"
           >
-            <h3 className="mb-2 text-base font-medium text-neutral-900 dark:text-neutral-100">{tip.title}</h3>
-            <p className="text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">{tip.description}</p>
-          </div>
+            <h3 className="mb-2 text-base font-medium text-[rgba(220,210,190,0.9)]">{tip.title}</h3>
+            <p className="text-sm leading-relaxed text-[rgba(220,210,190,0.65)]">{tip.description}</p>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }

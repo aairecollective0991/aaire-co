@@ -1,4 +1,8 @@
+"use client";
+
 import Image from "next/image";
+import { motion } from "framer-motion";
+import { fadeUp } from "@/app/lib/animations";
 
 const trustItems = [
   "Factory Direct Pricing",
@@ -14,11 +18,18 @@ export default function TrustStrip() {
       className="bg-[#f7f5f0] py-6 border-y border-[#0d1b2a]/10"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 lg:gap-x-12">
+        <motion.div
+          className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 lg:gap-x-12"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+        >
           {/* Worldwide Steel Buildings trust badge */}
-          <div
+          <motion.div
             id="trust-worldwide-badge"
             className="flex flex-col items-center gap-1.5 group"
+            variants={fadeUp}
+            custom={0}
           >
             <Image
               src="/images/logos/worldwide-logo.png"
@@ -30,24 +41,29 @@ export default function TrustStrip() {
             <span className="text-[#0d1b2a]/50 text-xs font-semibold tracking-widest uppercase font-[family-name:var(--font-inter)]">
               Certified Distributor
             </span>
-          </div>
+          </motion.div>
 
           {/* Divider */}
           <div className="hidden sm:block h-10 w-px bg-[#0d1b2a]/15" />
 
           {trustItems.map((item, i) => (
-            <div
+            <motion.div
               key={item}
               className="flex items-center gap-3 group"
               id={`trust-item-${i + 1}`}
+              variants={fadeUp}
+              custom={0.1 + i * 0.08}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-50px" }}
             >
               <span className="w-2 h-2 rounded-full bg-[#C9A96E] flex-shrink-0 group-hover:scale-125 transition-transform duration-200" />
               <span className="text-[#0d1b2a] text-sm font-semibold tracking-wide whitespace-nowrap font-[family-name:var(--font-inter)]">
                 {item}
               </span>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

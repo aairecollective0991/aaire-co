@@ -79,18 +79,18 @@ interface State {
 // ---------------------------------------------------------------------------
 
 const T = {
-  bg: "#0f1419",
-  panel: "#1a1f2e",
-  panelDeep: "#11161f",
-  border: "#2a3142",
-  borderSoft: "#222838",
-  accent: "#C9A96E",
-  cyan: "#00d4ff",
-  good: "#34d399",
-  warn: "#f5b54a",
-};
-const INK = "rgba(176,196,224,0.9)";
-const INK_DIM = "#94a3b8"; // ~6.5:1 on panels — passes WCAG AA for small text
+  bg:          "#0d1b2a",   // unified navy base
+  panel:       "#162336",   // navy-light
+  panelDeep:   "#0a1420",   // recessed inputs
+  border:      "#1e3a5a",   // navy-tinted border
+  borderSoft:  "#162a40",   // nested dividers
+  accent:      "#C9A96E",   // gold (unchanged)
+  cyan:        "#00d4ff",   // cyan highlight (unchanged)
+  good:        "#34d399",   // green (unchanged)
+  warn:        "#f5b54a",   // amber (unchanged)
+} as const;
+const INK = "rgba(220,210,190,0.9)";  // warm cream-adjacent
+const INK_DIM = "#94a3b8";             // secondary text — still passes WCAG AA on new panel
 
 // ---------------------------------------------------------------------------
 // Materials (named, high-contrast)
@@ -393,7 +393,7 @@ export default function BuildingConfigurator({ onQuoteRequest, initialState }: B
       {/* ===================== PREVIEW (full width) ===================== */}
       <div
         className="relative flex flex-col gap-3 rounded-xl border p-3"
-        style={{ background: T.panel, borderColor: T.border, backgroundImage: `linear-gradient(rgba(201,169,110,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(201,169,110,0.05) 1px, transparent 1px)`, backgroundSize: "24px 24px" }}
+        style={{ background: T.panel, borderColor: T.border, backgroundImage: `linear-gradient(rgba(201,169,110,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(201,169,110,0.08) 1px, transparent 1px)`, backgroundSize: "24px 24px" }}
       >
         {/* Summary bar */}
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2" style={{ background: T.panelDeep, borderColor: T.borderSoft }}>
@@ -402,6 +402,9 @@ export default function BuildingConfigurator({ onQuoteRequest, initialState }: B
           </span>
           <span className={`${mono.className} text-[13px] tabular-nums`} style={{ color: INK }}>
             {state.width}′W × {state.length}′L × {state.eave}′H · {state.pitch}:12 {state.roofStyle} · ridge {ridgeHeight}′
+          </span>
+          <span className={`${mono.className} text-[11px] tracking-widest uppercase hidden sm:block`} style={{ color: "rgba(201,169,110,0.35)" }}>
+            AAIRE CO. — PLAN VIEW
           </span>
         </div>
 
@@ -624,7 +627,7 @@ export default function BuildingConfigurator({ onQuoteRequest, initialState }: B
         </Card>
         </div>
 
-        <button type="button" onClick={() => onQuoteRequest?.(buildSpec(), buildSpecText())} className="rounded-md py-3.5 text-[15px] font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#C9A96E] focus-visible:ring-offset-[#0f1419]" style={{ color: T.bg, background: T.accent, boxShadow: `0 0 24px rgba(201,169,110,0.25)` }}>
+        <button type="button" onClick={() => onQuoteRequest?.(buildSpec(), buildSpecText())} className="rounded-md py-3.5 text-[15px] font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#C9A96E] focus-visible:ring-offset-[#0d1b2a]" style={{ color: T.bg, background: T.accent, boxShadow: `0 0 24px rgba(201,169,110,0.25)` }}>
           Request quote for this build →
         </button>
       </div>

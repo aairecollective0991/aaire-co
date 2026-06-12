@@ -1,15 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (delay: number = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1], delay },
-  }),
-};
+import { fadeUp } from "@/app/lib/animations";
 
 const supportPhases = [
   {

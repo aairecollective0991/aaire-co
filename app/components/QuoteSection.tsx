@@ -1,5 +1,7 @@
 "use client";
 
+import { motion } from "framer-motion";
+import { fadeUp } from "@/app/lib/animations";
 import QuoteForm from "./QuoteForm";
 
 const trustCards = [
@@ -44,8 +46,13 @@ export default function QuoteSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
           {/* Left: Copy */}
-          <div className="flex flex-col gap-8">
-            <div>
+          <motion.div
+            className="flex flex-col gap-8"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+          >
+            <motion.div variants={fadeUp} custom={0}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="h-px w-10 bg-[#C9A96E]" />
                 <span className="text-[#C9A96E] text-sm font-semibold tracking-widest uppercase">
@@ -56,9 +63,9 @@ export default function QuoteSection() {
                 Two steps.{" "}
                 <span className="text-[#0d1b2a]/50">No pressure.</span>
               </h2>
-            </div>
+            </motion.div>
 
-            <div className="flex flex-col gap-6">
+            <motion.div className="flex flex-col gap-6" variants={fadeUp} custom={0.1}>
               {[
                 {
                   step: "01",
@@ -83,15 +90,20 @@ export default function QuoteSection() {
                   </div>
                 </div>
               ))}
-            </div>
+            </motion.div>
 
             {/* Trust cards */}
-            <div className="flex flex-col gap-3 mt-2">
-              {trustCards.map((card) => (
-                <div
+            <motion.div className="flex flex-col gap-3 mt-2">
+              {trustCards.map((card, idx) => (
+                <motion.div
                   key={card.id}
                   id={card.id}
                   className="flex items-start gap-4 p-4 rounded-sm bg-[#f7f5f0] border border-[#0d1b2a]/8 hover:border-[#C9A96E]/40 transition-colors duration-300 group"
+                  variants={fadeUp}
+                  custom={0.2 + idx * 0.08}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, margin: "-100px" }}
                 >
                   <div className="text-[#C9A96E] flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform duration-200">
                     {card.icon}
@@ -104,13 +116,20 @@ export default function QuoteSection() {
                       {card.desc}
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           {/* Right: Quote Form */}
-          <div className="relative">
+          <motion.div
+            className="relative"
+            variants={fadeUp}
+            custom={0.15}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+          >
             <div className="rounded-sm overflow-hidden border border-[#0d1b2a]/10 shadow-xl shadow-[#0d1b2a]/5">
               <div className="bg-[#0d1b2a] px-5 py-4 flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-[#C9A96E]" />
@@ -122,7 +141,7 @@ export default function QuoteSection() {
                 <QuoteForm />
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

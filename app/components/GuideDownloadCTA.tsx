@@ -2,15 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
-  },
-};
+import { fadeUp } from "@/app/lib/animations";
 
 export default function GuideDownloadCTA() {
   return (

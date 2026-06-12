@@ -2,15 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (delay: number = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.7, ease: "easeOut" as const, delay },
-  }),
-};
+import { fadeUp } from "@/app/lib/animations";
 
 export default function Hero() {
   return (

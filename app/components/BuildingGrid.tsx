@@ -1,4 +1,8 @@
+"use client";
+
 import Image from "next/image";
+import { motion } from "framer-motion";
+import { fadeUp } from "@/app/lib/animations";
 
 const buildings = [
   {
@@ -72,7 +76,14 @@ export default function BuildingGrid() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section header */}
-        <div className="text-center mb-14 lg:mb-20">
+        <motion.div
+          className="text-center mb-14 lg:mb-20"
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          custom={0}
+        >
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-px w-10 bg-[#C9A96E]" />
             <span className="text-[#C9A96E] text-sm font-semibold tracking-widest uppercase">
@@ -86,15 +97,22 @@ export default function BuildingGrid() {
           <p className="mt-4 text-[#0d1b2a]/60 text-lg max-w-2xl mx-auto">
             Expert guidance meets competitive pricing — local knowledge, hands-on support, and premium steel buildings designed for your needs.
           </p>
-        </div>
+        </motion.div>
 
         {/* Cards Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {buildings.map((building) => (
-            <div
+        <motion.div
+          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+        >
+          {buildings.map((building, index) => (
+            <motion.div
               key={building.id}
               id={`building-card-${building.id}`}
               className="group relative flex flex-col overflow-hidden rounded-sm cursor-pointer hover:-translate-y-1.5 transition-transform duration-300"
+              variants={fadeUp}
+              custom={index * 0.1}
             >
               {/* Card image area — real photo with overlay */}
               <div className="relative h-52 overflow-hidden">
@@ -156,9 +174,9 @@ export default function BuildingGrid() {
                   </svg>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
